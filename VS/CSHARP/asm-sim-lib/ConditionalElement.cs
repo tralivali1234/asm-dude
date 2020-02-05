@@ -1,17 +1,17 @@
 ﻿// The MIT License (MIT)
 //
-// Copyright (c) 2017 Henk-Jan Lebbink
-// 
+// Copyright (c) 2019 Henk-Jan Lebbink
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,12 +20,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using AsmTools;
-using Microsoft.Z3;
-using System;
-
 namespace AsmSim
 {
+    using System;
+    using System.Diagnostics.Contracts;
+    using AsmTools;
+    using Microsoft.Z3;
+
     public enum ConditionalElement
     {
         NONE,
@@ -33,82 +34,102 @@ namespace AsmSim
 
         /// <summary>if carry (CF = 1)</summary>
         C,
+
         /// <summary>if below (CF = 1)</summary>
         B,
+
         /// <summary>if not above or equal (CF = 1)</summary>
         NAE,
+
         /// <summary>if not carry (CF = 0)</summary>
         NC,
+
         /// <summary>if above or equal (CF = 0)</summary>
         AE,
+
         /// <summary>if not below (CF = 0)</summary>
         NB,
+
         /// <summary>if zero (ZF = 1)</summary>
         Z,
+
         /// <summary>if equal (ZF = 1)</summary>
         E,
+
         /// <summary>if not zero (ZF = 0)</summary>
         NZ,
+
         /// <summary>if not equal (ZF = 0)</summary>
         NE,
+
         /// <summary>if sign (SF = 1)</summary>
         S,
+
         /// <summary>if not sign (SF = 0)</summary>
         NS,
+
         /// <summary>if parity (PF = 1)</summary>
         P,
+
         /// <summary>if parity even (PF = 1)</summary>
         PE,
+
         /// <summary>if not parity (PF = 0)</summary>
         NP,
+
         /// <summary>if parity odd (PF = 0)</summary>
         PO,
+
         /// <summary>if overflow (OF = 1)</summary>
         O,
+
         /// <summary>if not overflow (OF = 0)</summary>
         NO,
 
-
         /// <summary>if above (CF = 0 and ZF = 0)</summary>
         A,
+
         /// <summary>if not below or equal (CF = 0 and ZF = 0)</summary>
         NBE,
 
-        
         /// <summary>if below or equal (CF = 1 or ZF = 1)</summary>
         BE,
+
         /// <summary>if not above (CF = 1 or ZF = 1)</summary>
         NA,
 
-        
         /// <summary>if greater (ZF = 0 and SF = OF)</summary>
         G,
+
         /// <summary>if not less or equal (ZF = 0 and SF = OF)</summary>
         NLE,
 
-        
         /// <summary>if greater or equal (SF = OF)</summary>
         GE,
+
         /// <summary>if not less (SF = OF)</summary>
         NL,
 
-        
         /// <summary>if less (SF ≠ OF)</summary>
         L,
+
         /// <summary>if not greater or equal (SF ≠ OF)</summary>
         NGE,
 
         /// <summary>if less or equal (ZF = 1 or SF ≠ OF)/summary>
         LE,
+
         /// <summary>if not greater (ZF = 1 or SF ≠ OF)</summary>
         NG,
 
         /// <summary>if register CX zero (CX = 0)</summary>
         CXZ,
+
         /// <summary>if register ECX zero (ECX = 0)</summary>
         ECXZ,
+
         /// <summary>if register RCX zero (RCX = 0)</summary>
-        RCXZ
+        RCXZ,
     }
 
     public static partial class ToolsAsmSim
@@ -290,11 +311,14 @@ namespace AsmSim
                 default:
                     // unreachable
                     throw new Exception();
-
             }
         }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "<Pending>")]
         public static BoolExpr ConditionalTaken(ConditionalElement ce, string key, Context ctx)
         {
+            Contract.Requires(ctx != null);
+
             switch (ce)
             {
                 case ConditionalElement.NONE: return ctx.MkFalse();
@@ -320,7 +344,7 @@ namespace AsmSim
                 case ConditionalElement.P:
                 case ConditionalElement.PE: return PF();
 
-                case ConditionalElement.PO: 
+                case ConditionalElement.PO:
                 case ConditionalElement.NP: return ctx.MkNot(PF());
 
                 case ConditionalElement.O: return OF();
@@ -352,12 +376,12 @@ namespace AsmSim
                     throw new Exception();
             }
 
-            BoolExpr CF() { return Tools.Create_Key(Flags.CF, key, ctx); };
-            BoolExpr ZF() { return Tools.Create_Key(Flags.ZF, key, ctx); };
-            BoolExpr SF() { return Tools.Create_Key(Flags.SF, key, ctx); };
-            BoolExpr OF() { return Tools.Create_Key(Flags.OF, key, ctx); };
-            BoolExpr PF() { return Tools.Create_Key(Flags.PF, key, ctx); };
-            //BoolExpr AF() { return Mnemonics_ng.Tools.Flag_Key(Flags.AF, key, ctx); };
+            BoolExpr CF() { return Tools.Create_Key(Flags.CF, key, ctx); }
+            BoolExpr ZF() { return Tools.Create_Key(Flags.ZF, key, ctx); }
+            BoolExpr SF() { return Tools.Create_Key(Flags.SF, key, ctx); }
+            BoolExpr OF() { return Tools.Create_Key(Flags.OF, key, ctx); }
+            BoolExpr PF() { return Tools.Create_Key(Flags.PF, key, ctx); }
+            //BoolExpr AF() { return Mnemonics_ng.Tools.Flag_Key(Flags.AF, key, ctx); }
         }
     }
 }

@@ -1,17 +1,17 @@
 ﻿// The MIT License (MIT)
 //
-// Copyright (c) 2017 Henk-Jan Lebbink
-// 
+// Copyright (c) 2019 Henk-Jan Lebbink
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,9 +20,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using System;
-
-namespace AsmTools {
+namespace AsmTools
+{
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Diagnostics.Contracts;
 
     public enum Mnemonic
     {
@@ -31,8 +34,8 @@ namespace AsmTools {
         HLT,
 
         #region Data Transfer Instructions
-        //The data transfer instructions move data between memory and the general-purpose and segment registers. They
-        //also perform specific operations such as conditional moves, stack access, and data conversion.
+        // The data transfer instructions move data between memory and the general-purpose and segment registers. They
+        // also perform specific operations such as conditional moves, stack access, and data conversion.
 
         /// <summary>Move data between general-purpose registers; move data between memory and general purpose or segment registers; move immediates to general-purpose registers</summary>
         MOV,
@@ -173,7 +176,7 @@ namespace AsmTools {
         CMP,
         #endregion
         #region Decimal Arithmetic Instructions
-        //The decimal arithmetic instructions perform decimal arithmetic on binary coded decimal (BCD) data.
+        // The decimal arithmetic instructions perform decimal arithmetic on binary coded decimal (BCD) data.
 
         /// <summary>Decimal adjust after addition</summary>
         DAA,
@@ -189,8 +192,8 @@ namespace AsmTools {
         AAD,
         #endregion
         #region Logical Instructions
-        //The logical instructions perform basic AND, OR, XOR, and NOT logical operations on byte, word, and doubleword
-        //values.
+        // The logical instructions perform basic AND, OR, XOR, and NOT logical operations on byte, word, and doubleword
+        // values.
         /// <summary>Perform bitwise logical AND</summary>
         AND,
         /// <summary> Perform bitwise logical OR</summary>
@@ -201,7 +204,7 @@ namespace AsmTools {
         NOT,
         #endregion
         #region Shift and Rotate Instructions
-        //The shift and rotate instructions shift and rotate the bits in word and doubleword operands.
+        // The shift and rotate instructions shift and rotate the bits in word and doubleword operands.
         /// <summary>Shift arithmetic right</summary>
         SAR,
         /// <summary>Shift logical right</summary>
@@ -224,8 +227,8 @@ namespace AsmTools {
         RCL,
         #endregion
         #region Bit and Byte Instructions
-        //Bit instructions test and modify individual bits in word and doubleword operands. Byte instructions set the value of
-        //a byte operand to indicate the status of flags in the EFLAGS register.
+        // Bit instructions test and modify individual bits in word and doubleword operands. Byte instructions set the value of
+        // a byte operand to indicate the status of flags in the EFLAGS register.
         /// <summary>Bit test</summary>
         BT,
         /// <summary>Bit test and set</summary>
@@ -307,7 +310,7 @@ namespace AsmTools {
         #endregion
         #region Control Transfer Instructions
         // The control transfer instructions provide jump, conditional jump, loop, and call and return operations to control
-        //program flow.
+        // program flow.
         /// <summary>Jump</summary>
         JMP,
         /// <summary>Jump if equal</summary>
@@ -377,7 +380,7 @@ namespace AsmTools {
         /// <summary>Jump register RCX zero</summary>
         JRCXZ,
         /// <summary>Loop with ECX counter</summary>
-        LOOP,// 
+        LOOP,
         /// <summary>Loop with ECX and zero</summary>
         LOOPZ,
         /// <summary>Loop with ECX and equal</summary>
@@ -392,8 +395,10 @@ namespace AsmTools {
         RET,
         /// <summary>Return from interrupt</summary>
         IRET,
+#pragma warning disable CA1720 // Identifier contains type name
         /// <summary>Software interrupt</summary>
         INT,
+#pragma warning restore CA1720 // Identifier contains type name
         /// <summary>Interrupt on overflow</summary>
         INTO,
         /// <summary>Detect value out of range</summary>
@@ -532,7 +537,7 @@ namespace AsmTools {
         #endregion
         #endregion
         #region I/O Instructions
-        //These instructions move data between the processor’s I/O ports and a register or memory.
+        // These instructions move data between the processor’s I/O ports and a register or memory.
         /// <summary>Read from a port</summary>
         IN,
         /// <summary>Write to a port</summary>
@@ -565,7 +570,7 @@ namespace AsmTools {
         REP_OUTSD,
         #endregion
         #region Flag Control (EFLAG) Instructions
-        //The flag control instructions operate on the flags in the EFLAGS register.
+        // The flag control instructions operate on the flags in the EFLAGS register.
         /// <summary>Set carry flag</summary>
         STC,
         /// <summary>Clear the carry flag</summary>
@@ -594,7 +599,7 @@ namespace AsmTools {
         CLI,
         #endregion
         #region Segment Register Instructions
-        //The segment register instructions allow far pointers (segment addresses) to be loaded into the segment registers.
+        // The segment register instructions allow far pointers (segment addresses) to be loaded into the segment registers.
         /// <summary>Load far pointer using DS</summary>
         LDS,
         /// <summary> Load far pointer using ES</summary>
@@ -607,8 +612,8 @@ namespace AsmTools {
         LSS,
         #endregion
         #region Miscellaneous Instructions
-        //The miscellaneous instructions provide such functions as loading an effective address, executing a “no-operation,”
-        //and retrieving processor identification information.
+        // The miscellaneous instructions provide such functions as loading an effective address, executing a “no-operation,”
+        // and retrieving processor identification information.
         /// <summary>Load effective address</summary>
         LEA,
         /// <summary>No operation</summary>
@@ -618,7 +623,6 @@ namespace AsmTools {
         UD01,
         UD1,
         UD2,
-
 
         /// <summary>Table lookup translation</summary>
         XLAT,
@@ -2316,9 +2320,7 @@ namespace AsmTools {
         RDSHR,
         #endregion
 
-
         PPMULHRWA,
-
 
         /// <summary>Dot Product of Signed Words with Dword Accumulation (4-iterations)</summary>
         VP4DPWSSD,
@@ -2396,7 +2398,7 @@ namespace AsmTools {
         VPSHRDVQ,
         /// <summary>Shuffle Bits from Quadword Elements Using Byte Indexes into Mask</summary>
         VPSHUFBITQMB,
-        
+
         /// <summary>This instruction is used to execute privileged Intel SGX leaf functions that are used for managing and debugging the enclaves.</summary>
         ENCLS,
 
@@ -2441,14 +2443,101 @@ namespace AsmTools {
         SENTER,
         SEXIT,
         SMCTRL,
-        WAKEUP
+        WAKEUP,
 
+        CLDEMOTE,
+        MOVDIR64B,
+        MOVDIRI,
+        PCONFIG,
+        TPAUSE,
+        UMONITOR,
+        UMWAIT,
+        WBNOINVD,
+
+        ENQCMD,
+        ENQCMDS,
+
+        VCVTNE2PS2BF16,
+        VCVTNEPS2BF16,
+        VDPBF16PS,
+
+        VP2INTERSECTD,
+        VP2INTERSECTQ,
     }
 
-    public static partial class AsmSourceTools {
+    /// <summary>
+    /// Suffix for AT&T mnemonic
+    /// </summary>
+    public enum AttType
+    {
+        B = (byte)'B',
+        S = (byte)'S',
+        W = (byte)'W',
+        L = (byte)'L',
+        Q = (byte)'Q',
+        T = (byte)'T',
+        NONE = 0xFF,
+    }
 
-        public static bool IsJump(Mnemonic mnemonic) {
-            switch (mnemonic) {
+    public static partial class AsmSourceTools
+    {
+        private static readonly Dictionary<string, Mnemonic> Mnemonic_cache_;
+
+        /// <summary>Static class initializer for AsmSourceTools</summary>
+        static AsmSourceTools()
+        {
+            Mnemonic_cache_ = new Dictionary<string, Mnemonic>();
+            foreach (Mnemonic mnemonic in Enum.GetValues(typeof(Mnemonic)))
+            {
+                Mnemonic_cache_.Add(mnemonic.ToString(), mnemonic);
+            }
+        }
+
+        public static string ToCapitals(string str, bool strIsCapitals)
+        {
+            Contract.Requires(str != null);
+
+#if DEBUG
+            if (strIsCapitals && (str != str.ToUpperInvariant()))
+            {
+                throw new Exception();
+            }
+#endif
+            return (strIsCapitals) ? str : str.ToUpperInvariant();
+        }
+
+        private static AttType ParseAttType(char c)
+        {
+            switch (c)
+            {
+                case 'B': return AttType.B;
+                case 'S': return AttType.S;
+                case 'W': return AttType.W;
+                case 'L': return AttType.L;
+                case 'Q': return AttType.Q;
+                case 'T': return AttType.T;
+                default: return AttType.NONE;
+            }
+        }
+
+        private static bool IsAttType(char c)
+        {
+            switch (c)
+            {
+                case 'B':
+                case 'S':
+                case 'W':
+                case 'L':
+                case 'Q':
+                case 'T': return true;
+                default: return false;
+            }
+        }
+
+        public static bool IsJump(Mnemonic mnemonic)
+        {
+            switch (mnemonic)
+            {
                 case Mnemonic.JMP:
                 case Mnemonic.JE:
                 case Mnemonic.JZ:
@@ -2494,41 +2583,65 @@ namespace AsmTools {
         }
 
         /// <summary>Parse the provided string that contains a AT&T syntax mnemonic</summary>
-        public static Mnemonic ParseMnemonic_Att(string str, bool strIsCapitals = false)
+        public static Mnemonic ParseMnemonic_Att_OLD(string str, bool strIsCapitals = false)
         {
-            string str2 = (strIsCapitals) ? str : str.ToUpper();
+            Contract.Requires(str != null);
 
-            Mnemonic r = ParseMnemonic(str2, true);
-            if (r != Mnemonic.NONE) return r;
-            int length = str2.Length;
+            int length = str.Length;
+            if (length > 1)
+            {
+                string str2 = ToCapitals(str, strIsCapitals);
 
-            bool suffix;
-            switch (str[length - 1])
-            {
-                case 'B':
-                case 'S':
-                case 'W':
-                case 'L':
-                case 'Q':
-                case 'T': suffix = true; break;
-                default: suffix = false; break;
-            }
-            if (suffix)
-            {
-                string keyword2 = str.Substring(0, length - 1);
-                return AsmSourceTools.ParseMnemonic(keyword2, true);
+                Mnemonic r = ParseMnemonic(str2, true);
+                if (r != Mnemonic.NONE)
+                {
+                    return r;
+                }
+
+                AttType attType = ParseAttType(str2[length - 1]);
+                if (attType != AttType.NONE)
+                {
+                    string keyword2 = str2.Substring(0, length - 1);
+                    return ParseMnemonic(keyword2, true);
+                }
             }
             return Mnemonic.NONE;
         }
 
-        /// <summary>Parse the provided string that contains a Intel syntax mnemonic</summary>
-        public static Mnemonic ParseMnemonic(string str, bool strIsCapitals = false) {
-            #if DEBUG
-                if (strIsCapitals && (str != str.ToUpper())) throw new Exception();
-            #endif
-            if (!strIsCapitals) str = str.ToUpper();
+        public static (Mnemonic mnemonic, AttType attribute_type) ParseMnemonic_Att(string str, bool strIsCapitals = false)
+        {
+            Contract.Requires(str != null);
 
-            switch (str) {
+            int length = str.Length;
+            if (length > 1)
+            {
+                string str2 = ToCapitals(str, strIsCapitals);
+
+                Mnemonic r = ParseMnemonic(str2, true);
+                if (r != Mnemonic.NONE)
+                {
+                    return (r, AttType.NONE);
+                }
+                AttType attType = ParseAttType(str2[length - 1]);
+                if (attType != AttType.NONE)
+                {
+                    string keyword2 = str2.Substring(0, length - 1);
+                    return (ParseMnemonic(keyword2, true), attType);
+                }
+            }
+            return (Mnemonic.NONE, AttType.NONE);
+        }
+
+        public static Mnemonic ParseMnemonic(string str, bool strIsCapitals)
+        {
+            return (Mnemonic_cache_.TryGetValue(ToCapitals(str, strIsCapitals), out Mnemonic value)) ? value : Mnemonic.NONE;
+        }
+
+        /// <summary>Parse the provided string that contains a Intel syntax mnemonic</summary>
+        public static Mnemonic ParseMnemonic_OLD(string str, bool strIsCapitals = false)
+        {
+            switch (ToCapitals(str, strIsCapitals))
+            {
                 case "NONE": return Mnemonic.NONE;
                 case "MOV": return Mnemonic.MOV;
                 case "CMOVE": return Mnemonic.CMOVE;
@@ -2743,7 +2856,7 @@ namespace AsmTools {
                 case "REPZ": return Mnemonic.REPZ;
                 case "REPNE": return Mnemonic.REPNE;
                 case "REPNZ": return Mnemonic.REPNZ;
-               
+
                 case "REP_MOVS": return Mnemonic.REP_MOVS;
                 case "REP_MOVSB": return Mnemonic.REP_MOVSB;
                 case "REP_MOVSW": return Mnemonic.REP_MOVSW;
@@ -4568,10 +4681,130 @@ namespace AsmTools {
                 case "SMCTRL": return Mnemonic.SMCTRL;
                 case "WAKEUP": return Mnemonic.WAKEUP;
 
+                case "CLDEMOTE": return Mnemonic.CLDEMOTE;
+                case "MOVDIR64B": return Mnemonic.MOVDIR64B;
+                case "MOVDIRI": return Mnemonic.MOVDIRI;
+                case "PCONFIG": return Mnemonic.PCONFIG;
+                case "TPAUSE": return Mnemonic.TPAUSE;
+                case "UMONITOR": return Mnemonic.UMONITOR;
+                case "UMWAIT": return Mnemonic.UMWAIT;
+                case "WBNOINVD": return Mnemonic.WBNOINVD;
+
+                case "ENQCMD": return Mnemonic.ENQCMD;
+                case "ENQCMDS": return Mnemonic.ENQCMDS;
+
+                case "VCVTNE2PS2BF16": return Mnemonic.VCVTNE2PS2BF16;
+                case "VCVTNEPS2BF16": return Mnemonic.VCVTNEPS2BF16;
+                case "VDPBF16PS": return Mnemonic.VDPBF16PS;
+
+                case "VP2INTERSECTD": return Mnemonic.VP2INTERSECTD;
+                case "VP2INTERSECTQ": return Mnemonic.VP2INTERSECTQ;
+
                 default:
                     Console.WriteLine("WARNING;parseMnemonic. unknown str=\"" + str + "\".");
                     return Mnemonic.NONE;
             }
+        }
+
+        public static bool IsMnemonic(string keyword, bool strIsCapitals)
+        {
+            return Mnemonic_cache_.ContainsKey(ToCapitals(keyword, strIsCapitals));
+        }
+
+        public static bool IsMnemonic_Att(string keyword, bool strIsCapitals = false)
+        {
+            Contract.Requires(keyword != null);
+
+            int length = keyword.Length;
+            if (length < 2)
+            {
+                return false;
+            }
+
+            string str2 = ToCapitals(keyword, strIsCapitals);
+            if (IsMnemonic(str2, true))
+            {
+                return true;
+            }
+
+            if (!IsAttType(str2[length - 1]))
+            {
+                return false;
+            }
+
+            return IsMnemonic(str2.Substring(0, length - 1), true);
+        }
+
+        /// <summary>Simple speed test to compare parsing of mnemonics vs a lookup map</summary>
+        public static void SpeedTestMnemonicParsing()
+        {
+            Stopwatch stopwatch1 = new Stopwatch();
+            Stopwatch stopwatch2 = new Stopwatch();
+            bool strCapitals = true;
+
+            for (int i = 0; i < 1000; ++i)
+            {
+                foreach (Mnemonic mnemonic in Enum.GetValues(typeof(Mnemonic)))
+                {
+                    string str = mnemonic.ToString();
+                    {
+                        stopwatch1.Start();
+                        Mnemonic m1 = ParseMnemonic_OLD(str, strCapitals);
+                        stopwatch1.Stop();
+                        if (m1 != mnemonic)
+                        {
+                            Console.WriteLine("NOT OK OLD mnemonic=" + mnemonic.ToString() + "; str=" + str + "; m1=" + m1.ToString());
+                        }
+                    }
+                    {
+                        stopwatch2.Start();
+                        Mnemonic m1 = ParseMnemonic(str, strCapitals);
+                        stopwatch2.Stop();
+                        if (m1 != mnemonic)
+                        {
+                            Console.WriteLine("NOT OK     mnemonic=" + mnemonic.ToString() + "; str=" + str + "; m1=" + m1.ToString());
+                        }
+                    }
+                }
+            }
+            Console.WriteLine("ParseMnemonic OLD " + stopwatch1.ElapsedMilliseconds + " ms");
+            Console.WriteLine("ParseMnemonic     " + stopwatch2.ElapsedMilliseconds + " ms");
+        }
+
+        /// <summary>Simple speed test to compare parsing of registers vs a lookup map</summary>
+        public static void SpeedTestRegisterParsing()
+        {
+            Stopwatch stopwatch1 = new Stopwatch();
+            Stopwatch stopwatch2 = new Stopwatch();
+            bool strCapitals = true;
+
+            for (int i = 0; i < 1000; ++i)
+            {
+                foreach (Rn mnemonic in Enum.GetValues(typeof(Rn)))
+                {
+                    string str = mnemonic.ToString();
+                    {
+                        stopwatch1.Start();
+                        Rn m1 = RegisterTools.ParseRn_OLD(str, strCapitals);
+                        stopwatch1.Stop();
+                        if (m1 != mnemonic)
+                        {
+                            Console.WriteLine("NOT OK OLD rn=" + mnemonic.ToString() + "; str=" + str + "; m1=" + m1.ToString());
+                        }
+                    }
+                    {
+                        stopwatch2.Start();
+                        Rn m1 = RegisterTools.ParseRn(str, strCapitals);
+                        stopwatch2.Stop();
+                        if (m1 != mnemonic)
+                        {
+                            Console.WriteLine("NOT OK     rn=" + mnemonic.ToString() + "; str=" + str + "; m1=" + m1.ToString());
+                        }
+                    }
+                }
+            }
+            Console.WriteLine("ParseRn OLD " + stopwatch1.ElapsedMilliseconds + " ms");
+            Console.WriteLine("ParseRn     " + stopwatch2.ElapsedMilliseconds + " ms");
         }
     }
 }

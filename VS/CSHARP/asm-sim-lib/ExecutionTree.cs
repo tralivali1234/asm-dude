@@ -1,17 +1,17 @@
 ﻿// The MIT License (MIT)
 //
-// Copyright (c) 2017 Henk-Jan Lebbink
-// 
+// Copyright (c) 2019 Henk-Jan Lebbink
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,27 +20,25 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using QuickGraph;
-using System;
-using System.Collections.Generic;
-
 namespace AsmSim
 {
+    using System;
+    using System.Collections.Generic;
+    using QuickGraph;
+
     public class ExecutionTree : IDisposable
     {
         #region Fields
-        private readonly Tools _tools;
-        private readonly BidirectionalGraph<string, TaggedEdge<string, (bool Branch, string AsmCode)>> _graph;
-        private readonly IDictionary<string, State> _states;
-
-        private object _updateLock = new object();
-        #endregion 
+        private readonly Tools tools_;
+        private readonly BidirectionalGraph<string, TaggedEdge<string, (bool branch, string asmCode)>> graph_;
+        private readonly IDictionary<string, State> states_;
+        #endregion
 
         public ExecutionTree(Tools tools)
         {
-            this._tools = tools;
-            this._graph = new BidirectionalGraph<string, TaggedEdge<string, (bool Branch, string AsmCode)>>(true);
-            this._states = new Dictionary<string, State>();
+            this.tools_ = tools;
+            this.graph_ = new BidirectionalGraph<string, TaggedEdge<string, (bool branch, string asmCode)>>(true);
+            this.states_ = new Dictionary<string, State>();
         }
 
         public void Init(DynamicFlow dFlow, int startLineNumber)
@@ -63,37 +61,35 @@ namespace AsmSim
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls
 
+        public void Dispose()
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~ExecutionTree()
+        {
+            this.Dispose(false);
+        }
+
         protected virtual void Dispose(bool disposing)
         {
             if (!this.disposedValue)
             {
                 if (disposing)
                 {
-                    // TODO: dispose managed state (managed objects).
+                    this.graph_.Clear();
+
+                    foreach (var x in this.states_)
+                    {
+                        x.Value.Dispose();
+                    }
+                    this.states_.Clear();
                 }
-
-                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-                // TODO: set large fields to null.
-
+                // free native resources if there are any.
                 this.disposedValue = true;
             }
         }
-
-        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
-        // ~ExecutionTree() {
-        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-        //   Dispose(false);
-        // }
-
-        // This code added to correctly implement the disposable pattern.
-        void IDisposable.Dispose()
-        {
-            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-            Dispose(true);
-            // TODO: uncomment the following line if the finalizer is overridden above.
-            // GC.SuppressFinalize(this);
-        }
         #endregion
-
     }
 }

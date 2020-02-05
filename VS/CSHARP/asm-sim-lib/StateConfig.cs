@@ -1,14 +1,14 @@
 ﻿// The MIT License (MIT)
 //
-// Copyright (c) 2017 Henk-Jan Lebbink
-// 
+// Copyright (c) 2019 Henk-Jan Lebbink
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 
@@ -20,11 +20,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using AsmTools;
-using System.Collections.Generic;
-
 namespace AsmSim
 {
+    using System.Collections.Generic;
+    using AsmTools;
+
     public class StateConfig
     {
         public bool CF = false;
@@ -34,7 +34,6 @@ namespace AsmSim
         public bool SF = false;
         public bool OF = false;
         public bool DF = false;
-
 
         public bool RAX = false;
         public bool RBX = false;
@@ -56,7 +55,7 @@ namespace AsmSim
         public bool R14 = false;
         public bool R15 = false;
 
-        public bool mem = false;
+        public bool Mem = false;
 
         public bool SIMD = false;
 
@@ -65,8 +64,9 @@ namespace AsmSim
         {
             this.Set_All_Flags_On();
             this.Set_All_Reg_On();
-            this.mem = true;
+            this.Mem = true;
         }
+
         public void Set_All_Flags_On()
         {
             this.CF = true;
@@ -77,6 +77,7 @@ namespace AsmSim
             this.OF = true;
             this.DF = true;
         }
+
         public void Set_All_Reg_On()
         {
             this.RAX = true;
@@ -101,6 +102,7 @@ namespace AsmSim
 
             this.SIMD = true;
         }
+
         public void Set_All_Flags_Off()
         {
             this.CF = false;
@@ -111,6 +113,7 @@ namespace AsmSim
             this.OF = false;
             this.DF = false;
         }
+
         public void Set_All_Reg_Off()
         {
             this.RAX = false;
@@ -135,22 +138,52 @@ namespace AsmSim
 
             this.SIMD = false;
         }
+
         public void Set_All_Off()
         {
             this.Set_All_Flags_Off();
             this.Set_All_Reg_Off();
-            this.mem = false;
+            this.Mem = false;
         }
+
         public void Set_Flags_On(Flags flags)
         {
-            if (flags.HasFlag(Flags.CF)) this.CF = true;
-            if (flags.HasFlag(Flags.PF)) this.PF = true;
-            if (flags.HasFlag(Flags.AF)) this.AF = true;
-            if (flags.HasFlag(Flags.ZF)) this.ZF = true;
-            if (flags.HasFlag(Flags.SF)) this.SF = true;
-            if (flags.HasFlag(Flags.OF)) this.OF = true;
-            if (flags.HasFlag(Flags.DF)) this.DF = true;
+            if (flags.HasFlag(Flags.CF))
+            {
+                this.CF = true;
+            }
+
+            if (flags.HasFlag(Flags.PF))
+            {
+                this.PF = true;
+            }
+
+            if (flags.HasFlag(Flags.AF))
+            {
+                this.AF = true;
+            }
+
+            if (flags.HasFlag(Flags.ZF))
+            {
+                this.ZF = true;
+            }
+
+            if (flags.HasFlag(Flags.SF))
+            {
+                this.SF = true;
+            }
+
+            if (flags.HasFlag(Flags.OF))
+            {
+                this.OF = true;
+            }
+
+            if (flags.HasFlag(Flags.DF))
+            {
+                this.DF = true;
+            }
         }
+
         public void Set_Reg_On(Rn reg)
         {
             switch (reg)
@@ -206,6 +239,7 @@ namespace AsmSim
                 default: return false;
             }
         }
+
         public bool IsFlagOn(Flags flag)
         {
             switch (flag)
@@ -220,37 +254,126 @@ namespace AsmSim
                 default: return false;
             }
         }
+
         public IEnumerable<Rn> GetRegOn()
         {
-            if (this.RAX) yield return Rn.RAX;
-            if (this.RBX) yield return Rn.RBX;
-            if (this.RCX) yield return Rn.RCX;
-            if (this.RDX) yield return Rn.RDX;
+            if (this.RAX)
+            {
+                yield return Rn.RAX;
+            }
 
-            if (this.RSI) yield return Rn.RSI;
-            if (this.RDI) yield return Rn.RDI;
-            if (this.RBP) yield return Rn.RBP;
-            if (this.RSP) yield return Rn.RSP;
+            if (this.RBX)
+            {
+                yield return Rn.RBX;
+            }
 
-            if (this.R8) yield return Rn.R8;
-            if (this.R9) yield return Rn.R9;
-            if (this.R10) yield return Rn.R10;
-            if (this.R11) yield return Rn.R11;
+            if (this.RCX)
+            {
+                yield return Rn.RCX;
+            }
 
-            if (this.R12) yield return Rn.R12;
-            if (this.R13) yield return Rn.R13;
-            if (this.R14) yield return Rn.R14;
-            if (this.R15) yield return Rn.R15;
+            if (this.RDX)
+            {
+                yield return Rn.RDX;
+            }
+
+            if (this.RSI)
+            {
+                yield return Rn.RSI;
+            }
+
+            if (this.RDI)
+            {
+                yield return Rn.RDI;
+            }
+
+            if (this.RBP)
+            {
+                yield return Rn.RBP;
+            }
+
+            if (this.RSP)
+            {
+                yield return Rn.RSP;
+            }
+
+            if (this.R8)
+            {
+                yield return Rn.R8;
+            }
+
+            if (this.R9)
+            {
+                yield return Rn.R9;
+            }
+
+            if (this.R10)
+            {
+                yield return Rn.R10;
+            }
+
+            if (this.R11)
+            {
+                yield return Rn.R11;
+            }
+
+            if (this.R12)
+            {
+                yield return Rn.R12;
+            }
+
+            if (this.R13)
+            {
+                yield return Rn.R13;
+            }
+
+            if (this.R14)
+            {
+                yield return Rn.R14;
+            }
+
+            if (this.R15)
+            {
+                yield return Rn.R15;
+            }
         }
+
         public IEnumerable<Flags> GetFlagOn()
         {
-            if (this.CF) yield return Flags.CF;
-            if (this.PF) yield return Flags.PF;
-            if (this.AF) yield return Flags.AF;
-            if (this.ZF) yield return Flags.ZF;
-            if (this.SF) yield return Flags.SF;
-            if (this.OF) yield return Flags.OF;
-            if (this.DF) yield return Flags.DF;
+            if (this.CF)
+            {
+                yield return Flags.CF;
+            }
+
+            if (this.PF)
+            {
+                yield return Flags.PF;
+            }
+
+            if (this.AF)
+            {
+                yield return Flags.AF;
+            }
+
+            if (this.ZF)
+            {
+                yield return Flags.ZF;
+            }
+
+            if (this.SF)
+            {
+                yield return Flags.SF;
+            }
+
+            if (this.OF)
+            {
+                yield return Flags.OF;
+            }
+
+            if (this.DF)
+            {
+                yield return Flags.DF;
+            }
         }
         #endregion
     }

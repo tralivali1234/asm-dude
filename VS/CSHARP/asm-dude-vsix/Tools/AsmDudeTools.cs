@@ -1,17 +1,17 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2018 Henk-Jan Lebbink
-// 
+// Copyright (c) 2019 Henk-Jan Lebbink
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,42 +20,43 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using System;
-using System.Diagnostics;
-using System.Xml;
-using System.Globalization;
-using System.IO;
-using System.Collections.Generic;
-
-using AsmTools;
-using AsmDude.Tools;
-using Microsoft.VisualStudio.Shell;
-using AsmDude.SignatureHelp;
-using Amib.Threading;
-using System.Linq;
-
 namespace AsmDude
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Diagnostics.Contracts;
+    using System.Globalization;
+    using System.IO;
+    using System.Linq;
+    using System.Xml;
+    using System.Xml.XPath;
+    using Amib.Threading;
+    using AsmDude.SignatureHelp;
+    using AsmDude.Tools;
+    using AsmTools;
+    using Microsoft.VisualStudio.Shell;
+
     public sealed class AsmDudeTools : IDisposable
     {
-        private XmlDocument _xmlData;
-        private IDictionary<string, AsmTokenType> _type;
-        private IDictionary<string, AssemblerEnum> _assembler;
-        private IDictionary<string, Arch> _arch;
-        private IDictionary<string, string> _description;
-        private ISet<Mnemonic> _mnemonics_switched_on;
-        private ISet<Rn> _register_switched_on;
+        private XmlDocument xmlData_;
+        private IDictionary<string, AsmTokenType> type_;
+        private IDictionary<string, AssemblerEnum> assembler_;
+        private IDictionary<string, Arch> arch_;
+        private IDictionary<string, string> description_;
+        private readonly ISet<Mnemonic> mnemonics_switched_on_;
+        private readonly ISet<Rn> register_switched_on_;
 
-        private readonly ErrorListProvider _errorListProvider;
-        private readonly MnemonicStore _mnemonicStore;
-        private readonly PerformanceStore _performanceStore;
-        private readonly SmartThreadPool _threadPool;
+        private readonly ErrorListProvider errorListProvider_;
+        private readonly MnemonicStore mnemonicStore_;
+        private readonly PerformanceStore performanceStore_;
+        private readonly SmartThreadPool threadPool_;
 
         #region Singleton Stuff
-        private static readonly Lazy<AsmDudeTools> lazy = new Lazy<AsmDudeTools>(() => new AsmDudeTools());
-        public static AsmDudeTools Instance { get { return lazy.Value; } }
-        #endregion Singleton Stuff
+        private static readonly Lazy<AsmDudeTools> Lazy = new Lazy<AsmDudeTools>(() => new AsmDudeTools());
 
+        public static AsmDudeTools Instance { get { return Lazy.Value; } }
+        #endregion Singleton Stuff
 
         /// <summary>
         /// Singleton pattern: use AsmDudeTools.Instance for the instance of this class
@@ -64,35 +65,46 @@ namespace AsmDude
         {
             //AsmDudeToolsStatic.Output_INFO("AsmDudeTools constructor");
 
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             #region Initialize ErrorListProvider
-            IServiceProvider serviceProvider = new ServiceProvider(Package.GetGlobalService(typeof(Microsoft.VisualStudio.OLE.Interop.IServiceProvider)) as Microsoft.VisualStudio.OLE.Interop.IServiceProvider);
-            this._errorListProvider = new ErrorListProvider(serviceProvider)
+
+            //this._errorListProvider = new ErrorListProvider(new ServiceProvider(Package.GetGlobalService(typeof(Microsoft.VisualStudio.OLE.Interop.IServiceProvider)) as Microsoft.VisualStudio.OLE.Interop.IServiceProvider))
+            //{
+            //    ProviderName = "Asm Errors",
+            //    ProviderGuid = new Guid(EnvDTE.Constants.vsViewKindCode),
+            //};
+
+            IServiceProvider a = Package.GetGlobalService(typeof(System.IServiceProvider)) as IServiceProvider;
+
+            this.errorListProvider_ = new ErrorListProvider(a)
             {
                 ProviderName = "Asm Errors",
-                ProviderGuid = new Guid(EnvDTE.Constants.vsViewKindCode)
+                ProviderGuid = new Guid(EnvDTE.Constants.vsViewKindCode),
             };
+
             #endregion
 
-            this._threadPool = new SmartThreadPool();
+            this.threadPool_ = new SmartThreadPool();
 
             #region load Signature Store and Performance Store
             string path = AsmDudeToolsStatic.Get_Install_Path() + "Resources" + Path.DirectorySeparatorChar;
             {
-                string filename_Regular = path + "signature-dec2018.txt";
+                string filename_Regular = path + "signature-may2019.txt";
                 string filename_Hand = path + "signature-hand-1.txt";
-                this._mnemonicStore = new MnemonicStore(filename_Regular, filename_Hand);
+                this.mnemonicStore_ = new MnemonicStore(filename_Regular, filename_Hand);
             }
             {
-                this._performanceStore = new PerformanceStore(path + "Performance" + Path.DirectorySeparatorChar);
+                this.performanceStore_ = new PerformanceStore(path + "Performance" + Path.DirectorySeparatorChar);
             }
             #endregion
 
-            Init_Data();
+            this.Init_Data();
 
-            this._mnemonics_switched_on = new HashSet<Mnemonic>();
+            this.mnemonics_switched_on_ = new HashSet<Mnemonic>();
             this.UpdateMnemonicSwitchedOn();
 
-            this._register_switched_on = new HashSet<Rn>();
+            this.register_switched_on_ = new HashSet<Rn>();
             this.UpdateRegisterSwitchedOn();
 
             #region Experiments
@@ -102,13 +114,13 @@ namespace AsmDude
                 string filename2 = AsmDudeToolsStatic.Get_Install_Path() + "Resources" + Path.DirectorySeparatorChar + "mnemonics-nasm.txt";
                 MnemonicStore store2 = new MnemonicStore(filename2, null);
 
-                ISet<String> archs = new SortedSet<String>();
+                ISet<string> archs = new SortedSet<string>();
                 IDictionary<string, string> signaturesIntel = new Dictionary<string, string>();
                 IDictionary<string, string> signaturesNasm = new Dictionary<string, string>();
 
                 foreach (Mnemonic mnemonic in Enum.GetValues(typeof(Mnemonic)))
                 {
-                    IEnumerable<AsmSignatureElement> intel = this._mnemonicStore.GetSignatures(mnemonic);
+                    IEnumerable<AsmSignatureElement> intel = this.mnemonicStore_.GetSignatures(mnemonic);
                     IEnumerable<AsmSignatureElement> nasm = store2.GetSignatures(mnemonic);
 
                     signaturesIntel.Clear();
@@ -117,7 +129,7 @@ namespace AsmDude
                     foreach (AsmSignatureElement e in intel)
                     {
                         intelCount++;
-                        string instruction = e.Mnemonic.ToString() + " " + e.Operands_Str;
+                        string instruction = e.mnemonic.ToString() + " " + e.Operands_Str;
                         if (signaturesIntel.ContainsKey(instruction))
                         {
                             AsmDudeToolsStatic.Output_WARNING("Intel " + instruction + ": is already present with arch " + signaturesIntel[instruction] + "; new arch " + e.Arch_Str);
@@ -131,7 +143,7 @@ namespace AsmDude
                     foreach (AsmSignatureElement e in nasm)
                     {
                         nasmCount++;
-                        string instruction = e.Mnemonic.ToString() + " " + e.Operands_Str;
+                        string instruction = e.mnemonic.ToString() + " " + e.Operands_Str;
                         if (signaturesNasm.ContainsKey(instruction))
                         {
                             // AsmDudeToolsStatic.Output_WARNING("Nasm " + instruction + ": is already present with arch " + signaturesNasm[instruction] + "; new arch " + e.archStr);
@@ -144,11 +156,10 @@ namespace AsmDude
 
                     foreach (AsmSignatureElement e in intel)
                     {
-                        string instruction = e.Mnemonic.ToString() + " " + e.Operands_Str;
-
+                        string instruction = e.mnemonic.ToString() + " " + e.Operands_Str;
 
                         //AsmDudeToolsStatic.Output_INFO("Intel " + instruction + ": arch" + e.archStr);
-                        if ((e.Arch_Str == null) || (e.Arch_Str.Length == 0))
+                        if (string.IsNullOrEmpty(e.Arch_Str))
                         {
                             if (signaturesNasm.ContainsKey(instruction))
                             {
@@ -188,7 +199,7 @@ namespace AsmDude
                         }
                     }
                 }
-                foreach (String str in archs)
+                foreach (string str in archs)
                 {
                     AsmDudeToolsStatic.Output_INFO("INTEL arch " + str);
                 }
@@ -208,7 +219,7 @@ namespace AsmDude
                             usedMnemonics.Add(mnemonic);
                         }
                     }
-                    string str = "";
+                    string str = string.Empty;
                     foreach (Mnemonic mnemonic in usedMnemonics)
                     {
                         str += mnemonic.ToString() + ",";
@@ -221,30 +232,28 @@ namespace AsmDude
             {
                 foreach (Mnemonic mnemonic in Enum.GetValues(typeof(Mnemonic)))
                 {
-                    string keyword = mnemonic.ToString().ToUpper();
-                    if (this._description.ContainsKey(keyword))
+                    string keyword = mnemonic.ToString();
+                    if (this.description_.ContainsKey(keyword))
                     {
-                        string description = this._description[keyword];
-                        string reference = Get_Url(keyword);
+                        string description = this.description_[keyword];
+                        string reference = this.Get_Url(mnemonic);
 
                         this.Mnemonic_Store.SetHtmlRef(mnemonic, reference);
-
                     }
                 }
                 AsmDudeToolsStatic.Output_INFO(this.Mnemonic_Store.ToString());
             }
             if (false)
             {
-
                 ISet<string> archs = new HashSet<string>();
 
                 foreach (Mnemonic mnemonic in Enum.GetValues(typeof(Mnemonic)))
                 {
-                    if (!this._mnemonicStore.HasElement(mnemonic))
+                    if (!this.mnemonicStore_.HasElement(mnemonic))
                     {
                         AsmDudeToolsStatic.Output_INFO("AsmDudeTools constructor: mnemonic " + mnemonic + " is not present");
                     }
-                    foreach (AsmSignatureElement e in this._mnemonicStore.GetSignatures(mnemonic))
+                    foreach (AsmSignatureElement e in this.mnemonicStore_.GetSignatures(mnemonic))
                     {
                         foreach (string s in e.Arch_Str.Split(','))
                         {
@@ -252,12 +261,10 @@ namespace AsmDude
                         }
                     }
                 }
-
                 foreach (string s in archs)
                 {
                     AsmDudeToolsStatic.Output_INFO(s + ",");
                 }
-
             }
             #endregion
         }
@@ -266,15 +273,17 @@ namespace AsmDude
 
         public bool MnemonicSwitchedOn(Mnemonic mnemonic)
         {
-            return this._mnemonics_switched_on.Contains(mnemonic);
+            return this.mnemonics_switched_on_.Contains(mnemonic);
         }
+
         public IEnumerable<Mnemonic> Get_Allowed_Mnemonics()
         {
-            return this._mnemonics_switched_on;
+            return this.mnemonics_switched_on_;
         }
+
         public void UpdateMnemonicSwitchedOn()
         {
-            this._mnemonics_switched_on.Clear();
+            this.mnemonics_switched_on_.Clear();
             ISet<Arch> selectedArchs = AsmDudeToolsStatic.Get_Arch_Swithed_On();
             foreach (Mnemonic mnemonic in Enum.GetValues(typeof(Mnemonic)))
             {
@@ -282,7 +291,7 @@ namespace AsmDude
                 {
                     if (selectedArchs.Contains(a))
                     {
-                        _mnemonics_switched_on.Add(mnemonic);
+                        this.mnemonics_switched_on_.Add(mnemonic);
                         break;
                     }
                 }
@@ -291,15 +300,17 @@ namespace AsmDude
 
         public bool RegisterSwitchedOn(Rn reg)
         {
-            return this._register_switched_on.Contains(reg);
+            return this.register_switched_on_.Contains(reg);
         }
+
         public IEnumerable<Rn> Get_Allowed_Registers()
         {
-            return this._register_switched_on;
+            return this.register_switched_on_;
         }
+
         public void UpdateRegisterSwitchedOn()
         {
-            this._register_switched_on.Clear();
+            this.register_switched_on_.Clear();
             ISet<Arch> selectedArchs = AsmDudeToolsStatic.Get_Arch_Swithed_On();
             foreach (Rn reg in Enum.GetValues(typeof(Rn)))
             {
@@ -307,32 +318,38 @@ namespace AsmDude
                 {
                     if (selectedArchs.Contains(RegisterTools.GetArch(reg)))
                     {
-                        _register_switched_on.Add(reg);
+                        this.register_switched_on_.Add(reg);
                     }
                 }
             }
         }
 
-        public ErrorListProvider Error_List_Provider { get { return this._errorListProvider; } }
+        public ErrorListProvider Error_List_Provider { get { return this.errorListProvider_; } }
 
-        public MnemonicStore Mnemonic_Store { get { return this._mnemonicStore; } }
+        public MnemonicStore Mnemonic_Store { get { return this.mnemonicStore_; } }
 
-        public PerformanceStore Performance_Store { get { return this._performanceStore; } }
+        public PerformanceStore Performance_Store { get { return this.performanceStore_; } }
 
-        public SmartThreadPool Thread_Pool { get { return this._threadPool; } }
+        public SmartThreadPool Thread_Pool { get { return this.threadPool_; } }
 
         /// <summary>Get the collection of Keywords (in CAPITALS), but NOT mnemonics and registers</summary>
         public IEnumerable<string> Get_Keywords()
         {
-            if (this._type == null) this.Init_Data();
-            return this._type.Keys;
+            if (this.type_ == null)
+            {
+                this.Init_Data();
+            }
+
+            return this.type_.Keys;
         }
 
         public AsmTokenType Get_Token_Type_Att(string keyword)
         {
-            Debug.Assert(keyword == keyword.ToUpper());
+            Contract.Requires(keyword != null);
+            Contract.Requires(keyword == keyword.ToUpperInvariant());
+
             int length = keyword.Length;
-            Debug.Assert(length > 0);
+            Contract.Requires(length > 0);
 
             char firstChar = keyword[0];
 
@@ -343,7 +360,9 @@ namespace AsmDude
                 Rn reg = RegisterTools.ParseRn(keyword2, true);
                 if (reg != Rn.NOREG)
                 {
-                    if (RegisterSwitchedOn(reg)) return AsmTokenType.Register;
+                    return (this.RegisterSwitchedOn(reg))
+                       ? AsmTokenType.Register
+                       : AsmTokenType.Register; //TODO
                 }
             }
             #endregion
@@ -355,46 +374,55 @@ namespace AsmDude
             #endregion
             #region Test if keyword is an instruction
             {
-                Mnemonic mnemonic = AsmSourceTools.ParseMnemonic_Att(keyword, true);
+                (Mnemonic mnemonic, AttType type) = AsmSourceTools.ParseMnemonic_Att(keyword, true);
                 if (mnemonic != Mnemonic.NONE)
                 {
-                    if (MnemonicSwitchedOn(mnemonic)) return (AsmSourceTools.IsJump(mnemonic)) ? AsmTokenType.Jump : AsmTokenType.Mnemonic;
+                    return (this.MnemonicSwitchedOn(mnemonic))
+                        ? AsmSourceTools.IsJump(mnemonic) ? AsmTokenType.Jump : AsmTokenType.Mnemonic
+                        : AsmSourceTools.IsJump(mnemonic) ? AsmTokenType.Jump : AsmTokenType.MnemonicOff;
                 }
             }
             #endregion
 
-            return (this._type.TryGetValue(keyword, out var tokenType)) ? tokenType : AsmTokenType.UNKNOWN;
+            return this.type_.TryGetValue(keyword, out AsmTokenType tokenType) ? tokenType : AsmTokenType.UNKNOWN;
         }
 
         public AsmTokenType Get_Token_Type_Intel(string keyword)
         {
-            Debug.Assert(keyword == keyword.ToUpper());
+            Contract.Requires(keyword != null);
+            Contract.Requires(keyword == keyword.ToUpperInvariant());
 
             Mnemonic mnemonic = AsmSourceTools.ParseMnemonic(keyword, true);
             if (mnemonic != Mnemonic.NONE)
             {
-                if (MnemonicSwitchedOn(mnemonic)) return (AsmSourceTools.IsJump(mnemonic)) ? AsmTokenType.Jump : AsmTokenType.Mnemonic;
+                return (this.MnemonicSwitchedOn(mnemonic))
+                    ? AsmSourceTools.IsJump(mnemonic) ? AsmTokenType.Jump : AsmTokenType.Mnemonic
+                    : AsmSourceTools.IsJump(mnemonic) ? AsmTokenType.Jump : AsmTokenType.MnemonicOff;
             }
             Rn reg = RegisterTools.ParseRn(keyword, true);
             if (reg != Rn.NOREG)
             {
-                if (RegisterSwitchedOn(reg)) return AsmTokenType.Register;
+                return (this.RegisterSwitchedOn(reg))
+                    ? AsmTokenType.Register
+                    : AsmTokenType.Register; //TODO
             }
-            return (this._type.TryGetValue(keyword, out var tokenType)) ? tokenType : AsmTokenType.UNKNOWN;
+            return this.type_.TryGetValue(keyword, out AsmTokenType tokenType) ? tokenType : AsmTokenType.UNKNOWN;
         }
 
         public AssemblerEnum Get_Assembler(string keyword)
         {
-            Debug.Assert(keyword == keyword.ToUpper());
-            return (this._assembler.TryGetValue(keyword, out var value)) ? value : AssemblerEnum.UNKNOWN;
+            Contract.Requires(keyword != null);
+            Contract.Requires(keyword == keyword.ToUpperInvariant());
+
+            return this.assembler_.TryGetValue(keyword, out AssemblerEnum value) ? value : AssemblerEnum.UNKNOWN;
         }
 
         /// <summary>
         /// get url for the provided keyword. Returns empty string if the keyword does not exist or the keyword does not have an url.
         /// </summary>
-        public string Get_Url(string keyword)
+        public string Get_Url(Mnemonic mnemonic)
         {
-            return this.Mnemonic_Store.GetHtmlRef(AsmSourceTools.ParseMnemonic(keyword));
+            return this.Mnemonic_Store.GetHtmlRef(mnemonic);
         }
 
         /// <summary>
@@ -402,8 +430,10 @@ namespace AsmDude
         /// </summary>
         public string Get_Description(string keyword)
         {
-            Debug.Assert(keyword == keyword.ToUpper());
-            return (this._description.TryGetValue(keyword, out string description)) ? description : "";
+            Contract.Requires(keyword != null);
+            Contract.Requires(keyword == keyword.ToUpperInvariant());
+
+            return this.description_.TryGetValue(keyword, out string description) ? description : string.Empty;
         }
 
         /// <summary>
@@ -411,138 +441,141 @@ namespace AsmDude
         /// </summary>
         public Arch Get_Architecture(string keyword)
         {
-            Debug.Assert(keyword == keyword.ToUpper());
-            return (this._arch.TryGetValue(keyword, out Arch value)) ? value : Arch.NONE;
+            Contract.Requires(keyword != null);
+            Contract.Requires(keyword == keyword.ToUpperInvariant());
+
+            return this.arch_.TryGetValue(keyword, out Arch value) ? value : Arch.ARCH_NONE;
         }
 
         public void Invalidate_Data()
         {
-            this._xmlData = null;
-            this._type = null;
-            this._description = null;
+            this.xmlData_ = null;
+            this.type_ = null;
+            this.description_ = null;
         }
 
         #endregion Public Methods
+
         #region Private Methods
 
         private void Init_Data()
         {
-            this._type = new Dictionary<string, AsmTokenType>();
-            this._arch = new Dictionary<string, Arch>();
-            this._assembler = new Dictionary<string, AssemblerEnum>();
-            this._description = new Dictionary<string, string>();
+            this.type_ = new Dictionary<string, AsmTokenType>();
+            this.arch_ = new Dictionary<string, Arch>();
+            this.assembler_ = new Dictionary<string, AssemblerEnum>();
+            this.description_ = new Dictionary<string, string>();
             // fill the dictionary with keywords
-            XmlDocument xmlDoc = Get_Xml_Data();
+            XmlDocument xmlDoc = this.Get_Xml_Data();
             foreach (XmlNode node in xmlDoc.SelectNodes("//misc"))
             {
-                var nameAttribute = node.Attributes["name"];
+                XmlAttribute nameAttribute = node.Attributes["name"];
                 if (nameAttribute == null)
                 {
                     AsmDudeToolsStatic.Output_WARNING("AsmDudeTools:Init_Data: found misc with no name");
                 }
                 else
                 {
-                    string name = nameAttribute.Value.ToUpper();
-                    this._type[name] = AsmTokenType.Misc;
-                    this._arch[name] = Retrieve_Arch(node);
-                    this._description[name] = Retrieve_Description(node);
+                    string name = nameAttribute.Value.ToUpperInvariant();
+                    this.type_[name] = AsmTokenType.Misc;
+                    this.arch_[name] = Retrieve_Arch(node);
+                    this.description_[name] = Retrieve_Description(node);
                 }
             }
 
             foreach (XmlNode node in xmlDoc.SelectNodes("//directive"))
             {
-                var nameAttribute = node.Attributes["name"];
+                XmlAttribute nameAttribute = node.Attributes["name"];
                 if (nameAttribute == null)
                 {
                     AsmDudeToolsStatic.Output_WARNING("AsmDudeTools:Init_Data: found directive with no name");
                 }
                 else
                 {
-                    string name = nameAttribute.Value.ToUpper();
-                    this._type[name] = AsmTokenType.Directive;
-                    this._arch[name] = Retrieve_Arch(node);
-                    this._assembler[name] = Retrieve_Assembler(node);
-                    this._description[name] = Retrieve_Description(node);
+                    string name = nameAttribute.Value.ToUpperInvariant();
+                    this.type_[name] = AsmTokenType.Directive;
+                    this.arch_[name] = Retrieve_Arch(node);
+                    this.assembler_[name] = Retrieve_Assembler(node);
+                    this.description_[name] = Retrieve_Description(node);
                 }
             }
             foreach (XmlNode node in xmlDoc.SelectNodes("//register"))
             {
-                var nameAttribute = node.Attributes["name"];
+                XmlAttribute nameAttribute = node.Attributes["name"];
                 if (nameAttribute == null)
                 {
                     AsmDudeToolsStatic.Output_WARNING("AsmDudeTools:Init_Data: found register with no name");
                 }
                 else
                 {
-                    string name = nameAttribute.Value.ToUpper();
+                    string name = nameAttribute.Value.ToUpperInvariant();
                     //this._type[name] = AsmTokenType.Register;
-                    this._arch[name] = Retrieve_Arch(node);
-                    this._description[name] = Retrieve_Description(node);
+                    this.arch_[name] = Retrieve_Arch(node);
+                    this.description_[name] = Retrieve_Description(node);
                 }
             }
             foreach (XmlNode node in xmlDoc.SelectNodes("//userdefined1"))
             {
-                var nameAttribute = node.Attributes["name"];
+                XmlAttribute nameAttribute = node.Attributes["name"];
                 if (nameAttribute == null)
                 {
                     AsmDudeToolsStatic.Output_WARNING("AsmDudeTools:Init_Data: found userdefined1 with no name");
                 }
                 else
                 {
-                    string name = nameAttribute.Value.ToUpper();
-                    this._type[name] = AsmTokenType.UserDefined1;
-                    this._description[name] = Retrieve_Description(node);
+                    string name = nameAttribute.Value.ToUpperInvariant();
+                    this.type_[name] = AsmTokenType.UserDefined1;
+                    this.description_[name] = Retrieve_Description(node);
                 }
             }
             foreach (XmlNode node in xmlDoc.SelectNodes("//userdefined2"))
             {
-                var nameAttribute = node.Attributes["name"];
+                XmlAttribute nameAttribute = node.Attributes["name"];
                 if (nameAttribute == null)
                 {
                     AsmDudeToolsStatic.Output_WARNING("AsmDudeTools:Init_Data: found userdefined2 with no name");
                 }
                 else
                 {
-                    string name = nameAttribute.Value.ToUpper();
-                    this._type[name] = AsmTokenType.UserDefined2;
-                    this._description[name] = Retrieve_Description(node);
+                    string name = nameAttribute.Value.ToUpperInvariant();
+                    this.type_[name] = AsmTokenType.UserDefined2;
+                    this.description_[name] = Retrieve_Description(node);
                 }
             }
             foreach (XmlNode node in xmlDoc.SelectNodes("//userdefined3"))
             {
-                var nameAttribute = node.Attributes["name"];
+                XmlAttribute nameAttribute = node.Attributes["name"];
                 if (nameAttribute == null)
                 {
                     AsmDudeToolsStatic.Output_WARNING("AsmDudeTools:Init_Data: found userdefined3 with no name");
                 }
                 else
                 {
-                    string name = nameAttribute.Value.ToUpper();
-                    this._type[name] = AsmTokenType.UserDefined3;
-                    this._description[name] = Retrieve_Description(node);
+                    string name = nameAttribute.Value.ToUpperInvariant();
+                    this.type_[name] = AsmTokenType.UserDefined3;
+                    this.description_[name] = Retrieve_Description(node);
                 }
             }
         }
 
-        private Arch Retrieve_Arch(XmlNode node)
+        private static Arch Retrieve_Arch(XmlNode node)
         {
             try
             {
-                var archAttribute = node.Attributes["arch"];
-                return (archAttribute == null) ? Arch.NONE : AsmTools.ArchTools.ParseArch(archAttribute.Value.ToUpper());
+                XmlAttribute archAttribute = node.Attributes["arch"];
+                return (archAttribute == null) ? Arch.ARCH_NONE : ArchTools.ParseArch(archAttribute.Value, false, true);
             }
             catch (Exception)
             {
-                return Arch.NONE;
+                return Arch.ARCH_NONE;
             }
         }
 
-        private AssemblerEnum Retrieve_Assembler(XmlNode node)
+        private static AssemblerEnum Retrieve_Assembler(XmlNode node)
         {
             try
             {
-                var archAttribute = node.Attributes["tool"];
-                return (archAttribute == null) ? AssemblerEnum.UNKNOWN : AsmTools.AsmSourceTools.ParseAssembler(archAttribute.Value);
+                XmlAttribute archAttribute = node.Attributes["tool"];
+                return (archAttribute == null) ? AssemblerEnum.UNKNOWN : AsmSourceTools.ParseAssembler(archAttribute.Value, false);
             }
             catch (Exception)
             {
@@ -550,30 +583,34 @@ namespace AsmDude
             }
         }
 
-        private string Retrieve_Description(XmlNode node)
+        private static string Retrieve_Description(XmlNode node)
         {
             try
             {
                 XmlNode node2 = node.SelectSingleNode("./description");
-                return (node2 == null) ? "" : node2.InnerText.Trim();
+                return (node2 == null) ? string.Empty : node2.InnerText.Trim();
             }
             catch (Exception)
             {
-                return "";
+                return string.Empty;
             }
         }
 
         private XmlDocument Get_Xml_Data()
         {
             //Debug.WriteLine(string.Format(CultureInfo.CurrentCulture, "INFO: {0}:getXmlData", this.ToString()));
-            if (this._xmlData == null)
+            if (this.xmlData_ == null)
             {
                 string filename = AsmDudeToolsStatic.Get_Install_Path() + "Resources" + Path.DirectorySeparatorChar + "AsmDudeData.xml";
                 Debug.WriteLine(string.Format(CultureInfo.CurrentCulture, "INFO: AsmDudeTools:getXmlData: going to load file \"{0}\"", filename));
                 try
                 {
-                    this._xmlData = new XmlDocument();
-                    this._xmlData.Load(filename);
+                    this.xmlData_ = new XmlDocument() { XmlResolver = null };
+                    System.IO.StringReader sreader = new System.IO.StringReader(File.ReadAllText(filename));
+                    using (XmlReader reader = XmlReader.Create(sreader, new XmlReaderSettings() { XmlResolver = null }))
+                    {
+                        this.xmlData_.Load(reader);
+                    }
                 }
                 catch (FileNotFoundException)
                 {
@@ -588,15 +625,34 @@ namespace AsmDude
                     AsmDudeToolsStatic.Output_ERROR("AsmTokenTagger: error while reading file \"" + filename + "\"." + e);
                 }
             }
-            return this._xmlData;
+            return this.xmlData_;
         }
+
+        #endregion
+
+        #region IDisposable Support
 
         public void Dispose()
         {
-            this._errorListProvider.Dispose();
-            this._threadPool.Dispose();
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
+        ~AsmDudeTools()
+        {
+            this.Dispose(false);
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                // free managed resources
+                this.errorListProvider_.Dispose();
+                this.threadPool_.Dispose();
+            }
+            // free native resources if there are any.
+        }
         #endregion
     }
 }

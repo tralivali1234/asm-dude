@@ -1,17 +1,17 @@
 ﻿// The MIT License (MIT)
 //
-// Copyright (c) 2017 Henk-Jan Lebbink
-// 
+// Copyright (c) 2019 Henk-Jan Lebbink
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,16 +20,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using AsmSim.Mnemonics;
-using AsmTools;
-using System;
-
 namespace AsmSim
 {
+    using System;
+    using System.Diagnostics.Contracts;
+    using AsmSim.Mnemonics;
+    using AsmTools;
+
     public static class Runner
     {
         public static DynamicFlow Construct_DynamicFlow_Backward(StaticFlow sFlow, Tools tools)
         {
+            Contract.Requires(sFlow != null);
             return Construct_DynamicFlow_Backward(sFlow, sFlow.LastLineNumber, sFlow.NLines * 2, tools);
         }
 
@@ -42,6 +44,7 @@ namespace AsmSim
 
         public static DynamicFlow Construct_DynamicFlow_Forward(StaticFlow sFlow, Tools tools)
         {
+            Contract.Requires(sFlow != null);
             return Construct_DynamicFlow_Forward(sFlow, sFlow.FirstLineNumber, sFlow.NLines * 2, tools);
         }
 
@@ -55,15 +58,24 @@ namespace AsmSim
         /// <summary>Perform one step forward and return the regular branch</summary>
         public static State SimpleStep_Forward(string line, State state)
         {
+            if (state == null)
+            {
+                Console.WriteLine("WARNING: Runner:SimpleStep_Forward: provided state is null");
+                return null;
+            }
             try
             {
                 Tools tools = state.Tools;
                 string nextKey = Tools.CreateKey(tools.Rand);
                 string nextKeyBranch = "DUMMY_NOT_USED";
-                var content = AsmSourceTools.ParseLine(line);
-                using (var opcodeBase = Runner.InstantiateOpcode(content.Mnemonic, content.Args, (state.HeadKey, nextKey, nextKeyBranch), tools))
+                (string label, Mnemonic mnemonic, string[] args, string remark) = AsmSourceTools.ParseLine(line);
+                using (OpcodeBase opcodeBase = InstantiateOpcode(mnemonic, args, (state.HeadKey, nextKey, nextKeyBranch), tools))
                 {
-                    if (opcodeBase == null) return null;
+                    if (opcodeBase == null)
+                    {
+                        return null;
+                    }
+
                     if (opcodeBase.IsHalted)
                     {
                         Console.WriteLine("WARNING: Runner:SimpleStep_Forward: line: " + line + " is halted. Message: " + opcodeBase.SyntaxError);
@@ -71,14 +83,22 @@ namespace AsmSim
                     }
                     opcodeBase.Execute();
                     State stateOut = new State(state);
-                    stateOut.Update_Forward(opcodeBase.Updates.Regular);
+                    stateOut.Update_Forward(opcodeBase.Updates.regular);
                     stateOut.Frozen = true;
 
-                    opcodeBase.Updates.Regular?.Dispose();
-                    opcodeBase.Updates.Branch?.Dispose();
+                    opcodeBase.Updates.regular?.Dispose();
+                    opcodeBase.Updates.branch?.Dispose();
 
-                    if (!tools.Quiet) Console.WriteLine("INFO: Runner:SimpleStep_Forward: after \"" + line + "\" we know:");
-                    if (!tools.Quiet) Console.WriteLine(stateOut);
+                    if (!tools.Quiet)
+                    {
+                        Console.WriteLine("INFO: Runner:SimpleStep_Forward: after \"" + line + "\" we know:");
+                    }
+
+                    if (!tools.Quiet)
+                    {
+                        Console.WriteLine(stateOut);
+                    }
+
                     return stateOut;
                 }
             }
@@ -92,24 +112,41 @@ namespace AsmSim
         /// <summary>Perform onestep forward and return the state of the regular branch</summary>
         public static State SimpleStep_Backward(string line, State state)
         {
+            Contract.Requires(state != null);
+
             try
             {
                 string prevKey = Tools.CreateKey(state.Tools.Rand);
-                var content = AsmSourceTools.ParseLine(line);
-                using (var opcodeBase = Runner.InstantiateOpcode(content.Mnemonic, content.Args, (prevKey, state.TailKey, state.TailKey), state.Tools))
+                (string label, Mnemonic mnemonic, string[] args, string remark) content = AsmSourceTools.ParseLine(line);
+                using (OpcodeBase opcodeBase = InstantiateOpcode(content.mnemonic, content.args, (prevKey, state.TailKey, state.TailKey), state.Tools))
                 {
-                    if (opcodeBase == null) return null;
-                    if (opcodeBase.IsHalted) return null;
+                    if (opcodeBase == null)
+                    {
+                        return null;
+                    }
+
+                    if (opcodeBase.IsHalted)
+                    {
+                        return null;
+                    }
 
                     opcodeBase.Execute();
                     State stateOut = new State(state);
-                    stateOut.Update_Backward(opcodeBase.Updates.Regular, prevKey);
+                    stateOut.Update_Backward(opcodeBase.Updates.regular, prevKey);
 
-                    opcodeBase.Updates.Regular?.Dispose();
-                    opcodeBase.Updates.Branch?.Dispose();
+                    opcodeBase.Updates.regular?.Dispose();
+                    opcodeBase.Updates.branch?.Dispose();
 
-                    if (!state.Tools.Quiet) Console.WriteLine("INFO: Runner:SimpleStep_Backward: after \"" + line + "\" we know:");
-                    if (!state.Tools.Quiet) Console.WriteLine(stateOut);
+                    if (!state.Tools.Quiet)
+                    {
+                        Console.WriteLine("INFO: Runner:SimpleStep_Backward: after \"" + line + "\" we know:");
+                    }
+
+                    if (!state.Tools.Quiet)
+                    {
+                        Console.WriteLine(stateOut);
+                    }
+
                     return stateOut;
                 }
             }
@@ -121,61 +158,72 @@ namespace AsmSim
         }
 
         /// <summary>Perform one step forward and return states for both branches</summary>
-        public static (State Regular, State Branch) Step_Forward(string line, State state)
+        public static (State regular, State branch) Step_Forward(string line, State state)
         {
+            Contract.Requires(state != null);
+
             try
             {
                 string nextKey = Tools.CreateKey(state.Tools.Rand);
                 string nextKeyBranch = nextKey + "!BRANCH";
-                var content = AsmSourceTools.ParseLine(line);
-                using (var opcodeBase = Runner.InstantiateOpcode(content.Mnemonic, content.Args, (state.HeadKey, nextKey, nextKeyBranch), state.Tools))
+                (string label, Mnemonic mnemonic, string[] args, string remark) content = AsmSourceTools.ParseLine(line);
+                using (OpcodeBase opcodeBase = InstantiateOpcode(content.mnemonic, content.args, (state.HeadKey, nextKey, nextKeyBranch), state.Tools))
                 {
-                    if (opcodeBase == null) return (Regular: null, Branch: null);
-                    if (opcodeBase.IsHalted) return (Regular: null, Branch: null);
+                    if (opcodeBase == null)
+                    {
+                        return (regular: null, branch: null);
+                    }
+
+                    if (opcodeBase.IsHalted)
+                    {
+                        return (regular: null, branch: null);
+                    }
 
                     opcodeBase.Execute();
                     State stateRegular = null;
-                    if (opcodeBase.Updates.Regular != null)
+                    if (opcodeBase.Updates.regular != null)
                     {
                         stateRegular = new State(state);
-                        stateRegular.Update_Forward(opcodeBase.Updates.Regular);
-                        opcodeBase.Updates.Regular.Dispose();
+                        stateRegular.Update_Forward(opcodeBase.Updates.regular);
+                        opcodeBase.Updates.regular.Dispose();
                     }
                     State stateBranch = null;
-                    if (opcodeBase.Updates.Branch != null)
+                    if (opcodeBase.Updates.branch != null)
                     {
                         stateBranch = new State(state);
-                        stateBranch.Update_Forward(opcodeBase.Updates.Branch);
-                        opcodeBase.Updates.Branch.Dispose();
+                        stateBranch.Update_Forward(opcodeBase.Updates.branch);
+                        opcodeBase.Updates.branch.Dispose();
                     }
-                    return (Regular: stateRegular, Branch: stateBranch);
+                    return (regular: stateRegular, branch: stateBranch);
                 }
             }
             catch (Exception e)
             {
                 Console.WriteLine("WARNING: Runner:Step_Forward: Exception at line: " + line + "; e=" + e.Message);
-                return (null, null);
+                return (regular: null, branch: null);
             }
         }
 
-        public static (StateUpdate Regular, StateUpdate Branch) Execute(
+        public static (StateUpdate regular, StateUpdate branch) Execute(
             StaticFlow sFlow,
             int lineNumber,
-            (string PrevKey, string NextKey, string NextKeyBranch) keys,
+            (string prevKey, string nextKey, string nextKeyBranch) keys,
             Tools tools)
         {
+            Contract.Requires(sFlow != null);
+
             try
             {
-                var content = sFlow.Get_Line(lineNumber);
-                using (var opcodeBase = Runner.InstantiateOpcode(content.Mnemonic, content.Args, keys, tools))
+                (Mnemonic mnemonic, string[] args) content = sFlow.Get_Line(lineNumber);
+                using (OpcodeBase opcodeBase = InstantiateOpcode(content.mnemonic, content.args, keys, tools))
                 {
                     if ((opcodeBase == null) || opcodeBase.IsHalted)
                     {
-                        StateUpdate resetState = new StateUpdate(keys.PrevKey, keys.NextKey, tools)
+                        StateUpdate resetState = new StateUpdate(keys.prevKey, keys.nextKey, tools)
                         {
-                            Reset = true
+                            Reset = true,
                         };
-                        return (Regular: resetState, Branch: null);
+                        return (regular: resetState, branch: null);
                     }
                     opcodeBase.Execute();
                     return opcodeBase.Updates;
@@ -184,7 +232,7 @@ namespace AsmSim
             catch (Exception e)
             {
                 Console.WriteLine("WARNING: Runner:Step_Forward: Exception e=" + e.Message);
-                return (null, null);
+                return (regular: null, branch: null);
             }
         }
 
@@ -300,7 +348,7 @@ namespace AsmSim
                 case Mnemonic.BSF: return new Bsf(args, keys, t);
                 case Mnemonic.BSR: return new Bsr(args, keys, t);
                 case Mnemonic.TEST: return new Test(args, keys, t);
-                case Mnemonic.CRC32: break;//return new Crc32(args, keys, t);
+                case Mnemonic.CRC32: break; //return new Crc32(args, keys, t);
 
                 case Mnemonic.SETE:
                 case Mnemonic.SETZ:
@@ -375,7 +423,7 @@ namespace AsmSim
                 case Mnemonic.LOOPNZ: return new Loopnz(args, keys, t);
                 case Mnemonic.LOOPNE: return new Loopne(args, keys, t);
 
-                case Mnemonic.CALL: break;// return new Call(args, keys, t);
+                case Mnemonic.CALL: break; // return new Call(args, keys, t);
                 case Mnemonic.RET: break; // return new Ret(args, keys, t);
                 case Mnemonic.IRET: break;
                 case Mnemonic.INT: break;

@@ -41,7 +41,7 @@
     <Setting Name="CodeCompletion_On" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="AsmDoc_url" Type="System.String" Scope="User">
+    <Setting Name="AsmDoc_Url" Type="System.String" Scope="User">
       <Value Profile="(Default)">https://github.com/HJLebbink/asm-dude/wiki/</Value>
     </Setting>
     <Setting Name="AsmDoc_On" Type="System.Boolean" Scope="User">
@@ -62,16 +62,16 @@
     <Setting Name="useAssemblerNasm" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="IntelliSense_Show_UndefinedLabels" Type="System.Boolean" Scope="User">
+    <Setting Name="IntelliSense_Show_Undefined_Labels" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="IntelliSense_Show_ClashingLabels" Type="System.Boolean" Scope="User">
+    <Setting Name="IntelliSense_Show_Clashing_Labels" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="IntelliSense_Decorate_UndefinedLabels" Type="System.Boolean" Scope="User">
+    <Setting Name="IntelliSense_Decorate_Undefined_Labels" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="IntelliSense_Decorate_ClashingLabels" Type="System.Boolean" Scope="User">
+    <Setting Name="IntelliSense_Decorate_Clashing_Labels" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="ARCH_8086" Type="System.Boolean" Scope="User">
@@ -104,10 +104,10 @@
     <Setting Name="ARCH_SSSE3" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="ARCH_SSE41" Type="System.Boolean" Scope="User">
+    <Setting Name="ARCH_SSE4_1" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="ARCH_SSE42" Type="System.Boolean" Scope="User">
+    <Setting Name="ARCH_SSE4_2" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="ARCH_SSE4A" Type="System.Boolean" Scope="User">
@@ -122,25 +122,25 @@
     <Setting Name="ARCH_AVX2" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="ARCH_AVX512VL" Type="System.Boolean" Scope="User">
+    <Setting Name="ARCH_AVX512_VL" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="ARCH_AVX512PF" Type="System.Boolean" Scope="User">
+    <Setting Name="ARCH_AVX512_PF" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="ARCH_AVX512DQ" Type="System.Boolean" Scope="User">
+    <Setting Name="ARCH_AVX512_DQ" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="ARCH_AVX512BW" Type="System.Boolean" Scope="User">
+    <Setting Name="ARCH_AVX512_BW" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="ARCH_AVX512ER" Type="System.Boolean" Scope="User">
+    <Setting Name="ARCH_AVX512_ER" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="ARCH_AVX512F" Type="System.Boolean" Scope="User">
+    <Setting Name="ARCH_AVX512_F" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="ARCH_AVX512CD" Type="System.Boolean" Scope="User">
+    <Setting Name="ARCH_AVX512_CD" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="ARCH_X64" Type="System.Boolean" Scope="User">
@@ -221,9 +221,6 @@
     <Setting Name="ARCH_PREFETCHWT1" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="ARCH_PRFCHW" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
     <Setting Name="ARCH_RDPID" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
@@ -261,7 +258,7 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="PerformanceInfo_Skylake_On" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
+      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="PerformanceInfo_KnightsLanding_On" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
@@ -424,6 +421,57 @@
     </Setting>
     <Setting Name="ARCH_SGX2" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="PerformanceInfo_SkylakeX_On" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="PerformanceInfo_IsDefaultCollapsed" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="PerformanceInfo_On" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="ARCH_CLDEMOTE" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ARCH_MOVDIR64B" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ARCH_MOVDIRI" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ARCH_PCONFIG" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ARCH_WAITPKG" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ARCH_PRFCHW" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ARCH_AVX512_BF16" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ARCH_AVX512_VP2INTERSECT" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ARCH_ENQCMD" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="useAssemblerDisassemblyMasm" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="useAssemblerDisassemblyNasm_Att" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="useAssemblerDisassemblyAutoDetect" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="useAssemblerAutoDetect" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="Global_MaxFileLines" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">50000</Value>
     </Setting>
   </Settings>
 </SettingsFile>

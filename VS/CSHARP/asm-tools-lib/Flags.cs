@@ -1,7 +1,7 @@
 ﻿// The MIT License (MIT)
 //
-// Copyright (c) 2017 Henk-Jan Lebbink
-// 
+// Copyright (c) 2019 Henk-Jan Lebbink
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
@@ -20,15 +20,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace AsmTools
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics.Contracts;
+    using System.Text;
+
     /// <summary>Flags, CF, PF, AF, ZF, SF, OF, DF, IF</summary>
     [Flags]
-    public enum Flags : byte
+    public enum Flags
     {
         NONE = 0,
         /// <summary>
@@ -74,14 +75,13 @@ namespace AsmTools
         /// <summary>
         /// TF (bit 8) Trap flag — Control Flag.
         /// </summary>
-        //TF = 1 << 8,
-
+        // TF = 1 << 8,
 
         ALL = CF | PF | AF | ZF | SF | OF | DF,
 
         CF_PF_AF_SF_OF = CF | PF | AF | SF | OF,
         CF_PF_AF_ZF_SF_OF = CF | PF | AF | ZF | SF | OF,
-        PF_AF_ZF_SF_OF = PF | AF | ZF | SF | OF
+        PF_AF_ZF_SF_OF = PF | AF | ZF | SF | OF,
     }
 
     public static class FlagTools
@@ -89,13 +89,15 @@ namespace AsmTools
         /// <summary>Test whether provided flags is a single flag</summary>
         public static bool SingleFlag(Flags flags)
         {
-            int intVal = ((int)flags);
+            int intVal = (int)flags;
             return (intVal != 0) && ((intVal & (intVal - 1)) == 0);
         }
 
-        public static Flags Parse(string str)
+        public static Flags Parse(string str, bool strIsCapitals)
         {
-            switch (str.ToUpper())
+            Contract.Requires(str != null);
+
+            switch (AsmSourceTools.ToCapitals(str, strIsCapitals))
             {
                 case "CF": return Flags.CF;
                 case "PF": return Flags.PF;
@@ -110,27 +112,62 @@ namespace AsmTools
 
         public static string ToString(Flags flags)
         {
-            if (flags == Flags.NONE) return "NONE";
-            if (flags == Flags.ALL) return "ALL";
+            if (flags == Flags.NONE)
+            {
+                return "NONE";
+            }
+
+            if (flags == Flags.ALL)
+            {
+                return "ALL";
+            }
 
             StringBuilder sb = new StringBuilder();
             foreach (Flags flag in GetFlags(flags))
             {
                 sb.Append(flag).Append("|");
             }
-            if (sb.Length > 1) sb.Length -= 1; // remove the trailing comma space
+            if (sb.Length > 1)
+            {
+                sb.Length -= 1; // remove the trailing comma space
+            }
+
             return sb.ToString();
         }
 
         public static IEnumerable<Flags> GetFlags(Flags flags)
         {
-            if (flags.HasFlag(Flags.CF)) yield return Flags.CF;
-            if (flags.HasFlag(Flags.PF)) yield return Flags.PF;
-            if (flags.HasFlag(Flags.AF)) yield return Flags.AF;
-            if (flags.HasFlag(Flags.ZF)) yield return Flags.ZF;
-            if (flags.HasFlag(Flags.SF)) yield return Flags.SF;
-            if (flags.HasFlag(Flags.OF)) yield return Flags.OF;
+            if (flags.HasFlag(Flags.CF))
+            {
+                yield return Flags.CF;
+            }
+
+            if (flags.HasFlag(Flags.PF))
+            {
+                yield return Flags.PF;
+            }
+
+            if (flags.HasFlag(Flags.AF))
+            {
+                yield return Flags.AF;
+            }
+
+            if (flags.HasFlag(Flags.ZF))
+            {
+                yield return Flags.ZF;
+            }
+
+            if (flags.HasFlag(Flags.SF))
+            {
+                yield return Flags.SF;
+            }
+
+            if (flags.HasFlag(Flags.OF))
+            {
+                yield return Flags.OF;
+            }
         }
+
         public static IEnumerable<Flags> GetFlags()
         {
             yield return Flags.CF;
@@ -141,4 +178,4 @@ namespace AsmTools
             yield return Flags.OF;
         }
     }
- }
+}

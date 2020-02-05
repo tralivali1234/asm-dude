@@ -1,14 +1,36 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using AsmSim;
-using System.Collections.Generic;
+﻿// The MIT License (MIT)
+//
+// Copyright (c) 2019 Henk-Jan Lebbink
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
 namespace unit_tests_asm_z3
 {
-	[TestClass]
-	public class Test_StaticFlow
-	{
-        const bool logToDisplay = TestTools.LOG_TO_DISPLAY;
+    using System;
+    using System.Collections.Generic;
+    using AsmSim;
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+    [TestClass]
+    public class Test_StaticFlow
+    {
+        private const bool LogToDisplay = AsmTestTools.LOG_TO_DISPLAY;
 
         [TestMethod]
         public void Test_StaticFlow_Forward_1()
@@ -28,7 +50,10 @@ namespace unit_tests_asm_z3
             StaticFlow sFlow = new StaticFlow(new Tools());
             bool removeEmptyLines = false;
             sFlow.Update(programStr, removeEmptyLines);
-            if (logToDisplay) Console.WriteLine(sFlow);
+            if (LogToDisplay)
+            {
+                Console.WriteLine(sFlow);
+            }
 
             Assert.AreEqual(9, sFlow.NLines);
             Assert.AreEqual((1, 3), sFlow.Get_Next_LineNumber(0));
@@ -41,15 +66,15 @@ namespace unit_tests_asm_z3
             Assert.AreEqual((8, 8), sFlow.Get_Next_LineNumber(7));
             Assert.AreEqual((9, -1), sFlow.Get_Next_LineNumber(8));
 
-            var p0 = new List<(int LineNumber, bool IsBranch)>(sFlow.Get_Prev_LineNumber(0));
-            var p1 = new List<(int LineNumber, bool IsBranch)>(sFlow.Get_Prev_LineNumber(1));
-            var p2 = new List<(int LineNumber, bool IsBranch)>(sFlow.Get_Prev_LineNumber(2));
-            var p3 = new List<(int LineNumber, bool IsBranch)>(sFlow.Get_Prev_LineNumber(3));
-            var p4 = new List<(int LineNumber, bool IsBranch)>(sFlow.Get_Prev_LineNumber(4));
-            var p5 = new List<(int LineNumber, bool IsBranch)>(sFlow.Get_Prev_LineNumber(5));
-            var p6 = new List<(int LineNumber, bool IsBranch)>(sFlow.Get_Prev_LineNumber(6));
-            var p7 = new List<(int LineNumber, bool IsBranch)>(sFlow.Get_Prev_LineNumber(7));
-            var p8 = new List<(int LineNumber, bool IsBranch)>(sFlow.Get_Prev_LineNumber(8));
+            List<(int lineNumber, bool isBranch)> p0 = new List<(int lineNumber, bool isBranch)>(sFlow.Get_Prev_LineNumber(0));
+            List<(int lineNumber, bool isBranch)> p1 = new List<(int lineNumber, bool isBranch)>(sFlow.Get_Prev_LineNumber(1));
+            List<(int lineNumber, bool isBranch)> p2 = new List<(int lineNumber, bool isBranch)>(sFlow.Get_Prev_LineNumber(2));
+            List<(int lineNumber, bool isBranch)> p3 = new List<(int lineNumber, bool isBranch)>(sFlow.Get_Prev_LineNumber(3));
+            List<(int lineNumber, bool isBranch)> p4 = new List<(int lineNumber, bool isBranch)>(sFlow.Get_Prev_LineNumber(4));
+            List<(int lineNumber, bool isBranch)> p5 = new List<(int lineNumber, bool isBranch)>(sFlow.Get_Prev_LineNumber(5));
+            List<(int lineNumber, bool isBranch)> p6 = new List<(int lineNumber, bool isBranch)>(sFlow.Get_Prev_LineNumber(6));
+            List<(int lineNumber, bool isBranch)> p7 = new List<(int lineNumber, bool isBranch)>(sFlow.Get_Prev_LineNumber(7));
+            List<(int lineNumber, bool isBranch)> p8 = new List<(int lineNumber, bool isBranch)>(sFlow.Get_Prev_LineNumber(8));
 
             Assert.AreEqual(0, p0.Count);
             Assert.AreEqual(1, p1.Count);
@@ -90,21 +115,24 @@ namespace unit_tests_asm_z3
             StaticFlow sFlow = new StaticFlow(new Tools());
             bool removeEmptyLines = true;
             sFlow.Update(programStr, removeEmptyLines);
-            if (logToDisplay) Console.WriteLine(sFlow);
+            if (LogToDisplay)
+            {
+                Console.WriteLine(sFlow);
+            }
 
             #region Retrieve Data
 
-            var n0 = sFlow.Get_Next_LineNumber(0);
-            var n1 = sFlow.Get_Next_LineNumber(1);
-            var n2 = sFlow.Get_Next_LineNumber(2);
-            var n3 = sFlow.Get_Next_LineNumber(3);
-            var n4 = sFlow.Get_Next_LineNumber(4);
-            var n5 = sFlow.Get_Next_LineNumber(5);
-            var n6 = sFlow.Get_Next_LineNumber(6);
-            var n7 = sFlow.Get_Next_LineNumber(7);
-            var n8 = sFlow.Get_Next_LineNumber(8);
-            var n9 = sFlow.Get_Next_LineNumber(9);
-//            var n10 = sFlow.Get_Next_LineNumber(10);
+            (int regular, int branch) n0 = sFlow.Get_Next_LineNumber(0);
+            (int regular, int branch) n1 = sFlow.Get_Next_LineNumber(1);
+            (int regular, int branch) n2 = sFlow.Get_Next_LineNumber(2);
+            (int regular, int branch) n3 = sFlow.Get_Next_LineNumber(3);
+            (int regular, int branch) n4 = sFlow.Get_Next_LineNumber(4);
+            (int regular, int branch) n5 = sFlow.Get_Next_LineNumber(5);
+            (int regular, int branch) n6 = sFlow.Get_Next_LineNumber(6);
+            (int regular, int branch) n7 = sFlow.Get_Next_LineNumber(7);
+            (int regular, int branch) n8 = sFlow.Get_Next_LineNumber(8);
+            (int regular, int branch) n9 = sFlow.Get_Next_LineNumber(9);
+            // var n10 = sFlow.Get_Next_LineNumber(10);
 
             Console.WriteLine("n0 = " + string.Join(",", n0));
             Console.WriteLine("n1 = " + string.Join(",", n1));
@@ -116,19 +144,19 @@ namespace unit_tests_asm_z3
             Console.WriteLine("n7 = " + string.Join(",", n7));
             Console.WriteLine("n8 = " + string.Join(",", n8));
             Console.WriteLine("n9 = " + string.Join(",", n9));
-//            Console.WriteLine("n10 = " + string.Join(",", n10));
+            // Console.WriteLine("n10 = " + string.Join(",", n10));
 
-            var p0 = new List<(int LineNumber, bool IsBranch)>(sFlow.Get_Prev_LineNumber(0));
-            var p1 = new List<(int LineNumber, bool IsBranch)>(sFlow.Get_Prev_LineNumber(1));
-            var p2 = new List<(int LineNumber, bool IsBranch)>(sFlow.Get_Prev_LineNumber(2));
-            var p3 = new List<(int LineNumber, bool IsBranch)>(sFlow.Get_Prev_LineNumber(3));
-            var p4 = new List<(int LineNumber, bool IsBranch)>(sFlow.Get_Prev_LineNumber(4));
-            var p5 = new List<(int LineNumber, bool IsBranch)>(sFlow.Get_Prev_LineNumber(5));
-            var p6 = new List<(int LineNumber, bool IsBranch)>(sFlow.Get_Prev_LineNumber(6));
-            var p7 = new List<(int LineNumber, bool IsBranch)>(sFlow.Get_Prev_LineNumber(7));
-            var p8 = new List<(int LineNumber, bool IsBranch)>(sFlow.Get_Prev_LineNumber(8));
-            var p9 = new List<(int LineNumber, bool IsBranch)>(sFlow.Get_Prev_LineNumber(9));
-            //var p10 = new List<(int LineNumber, bool IsBranch)>(sFlow.Get_Prev_LineNumber(10));
+            List<(int lineNumber, bool isBranch)> p0 = new List<(int lineNumber, bool isBranch)>(sFlow.Get_Prev_LineNumber(0));
+            List<(int lineNumber, bool isBranch)> p1 = new List<(int lineNumber, bool isBranch)>(sFlow.Get_Prev_LineNumber(1));
+            List<(int lineNumber, bool isBranch)> p2 = new List<(int lineNumber, bool isBranch)>(sFlow.Get_Prev_LineNumber(2));
+            List<(int lineNumber, bool isBranch)> p3 = new List<(int lineNumber, bool isBranch)>(sFlow.Get_Prev_LineNumber(3));
+            List<(int lineNumber, bool isBranch)> p4 = new List<(int lineNumber, bool isBranch)>(sFlow.Get_Prev_LineNumber(4));
+            List<(int lineNumber, bool isBranch)> p5 = new List<(int lineNumber, bool isBranch)>(sFlow.Get_Prev_LineNumber(5));
+            List<(int lineNumber, bool isBranch)> p6 = new List<(int lineNumber, bool isBranch)>(sFlow.Get_Prev_LineNumber(6));
+            List<(int lineNumber, bool isBranch)> p7 = new List<(int lineNumber, bool isBranch)>(sFlow.Get_Prev_LineNumber(7));
+            List<(int lineNumber, bool isBranch)> p8 = new List<(int lineNumber, bool isBranch)>(sFlow.Get_Prev_LineNumber(8));
+            List<(int lineNumber, bool isBranch)> p9 = new List<(int lineNumber, bool isBranch)>(sFlow.Get_Prev_LineNumber(9));
+            // var p10 = new List<(int LineNumber, bool IsBranch)>(sFlow.Get_Prev_LineNumber(10));
 
             Console.WriteLine("p0 = " + string.Join(",", p0));
             Console.WriteLine("p1 = " + string.Join(",", p1));
@@ -140,7 +168,7 @@ namespace unit_tests_asm_z3
             Console.WriteLine("p7 = " + string.Join(",", p7));
             Console.WriteLine("p8 = " + string.Join(",", p8));
             Console.WriteLine("p9 = " + string.Join(",", p9));
-            //Console.WriteLine("p10 = " + string.Join(",", p10));
+            // Console.WriteLine("p10 = " + string.Join(",", p10));
 
             #endregion
 
@@ -157,7 +185,7 @@ namespace unit_tests_asm_z3
             Assert.AreEqual((9, 9), n7);
             Assert.AreEqual((-1, -1), n8);
             Assert.AreEqual((-1, -1), n9);
-            //Assert.AreEqual((-1, -1), n10);
+            // Assert.AreEqual((-1, -1), n10);
             #endregion
 
             #region Test Previous
@@ -171,7 +199,7 @@ namespace unit_tests_asm_z3
             Assert.AreEqual(1, p7.Count);
             Assert.AreEqual(0, p8.Count);
             Assert.AreEqual(2, p9.Count);
-            //Assert.AreEqual(2, p10.Count);
+            // Assert.AreEqual(2, p10.Count);
 
             Assert.AreEqual((0, false), p1[0]);
             Assert.AreEqual((1, false), p2[0]);
@@ -179,8 +207,8 @@ namespace unit_tests_asm_z3
             Assert.AreEqual((2, true), p6[0]);
             Assert.AreEqual((4, false), p6[1]);
             Assert.AreEqual((6, false), p7[0]);
-            //Assert.AreEqual((7, false), p10[0]);
-            //Assert.AreEqual((7, true), p10[1]);
+            // Assert.AreEqual((7, false), p10[0]);
+            // Assert.AreEqual((7, true), p10[1]);
             #endregion
         }
 
@@ -196,7 +224,10 @@ namespace unit_tests_asm_z3
                 "           mov     rcx,        1      ;line 5         ";
             StaticFlow flow = new StaticFlow(new Tools());
             flow.Update(programStr);
-            if (logToDisplay) Console.WriteLine(flow);
+            if (LogToDisplay)
+            {
+                Console.WriteLine(flow);
+            }
 
             Assert.IsFalse(flow.Is_Branch_Point(0));
             Assert.IsFalse(flow.Is_Branch_Point(1));
@@ -218,7 +249,10 @@ namespace unit_tests_asm_z3
                "           mov     rcx,        1      ;line 5         ";
             StaticFlow flow = new StaticFlow(new Tools());
             flow.Update(programStr, false);
-            if (logToDisplay) Console.WriteLine(flow);
+            if (LogToDisplay)
+            {
+                Console.WriteLine(flow);
+            }
 
             Assert.IsFalse(flow.Is_Merge_Point(0));
             Assert.IsTrue(flow.Is_Merge_Point(1));
@@ -241,10 +275,13 @@ namespace unit_tests_asm_z3
 
             StaticFlow flow = new StaticFlow(new Tools());
             flow.Update(programStr, false);
-            if (logToDisplay) Console.WriteLine(flow);
+            if (LogToDisplay)
+            {
+                Console.WriteLine(flow);
+            }
 
-            var v = flow.FutureLineNumbers(1);
-            Console.WriteLine("Number of elements: " + v.Count + ": " + String.Join(",", v));
+            ISet<int> v = flow.FutureLineNumbers(1);
+            Console.WriteLine("Number of elements: " + v.Count + ": " + string.Join(",", v));
 
             Assert.IsFalse(v.Contains(0));
             Assert.IsTrue(v.Contains(1));
@@ -267,7 +304,10 @@ namespace unit_tests_asm_z3
 
             StaticFlow flow = new StaticFlow(new Tools());
             flow.Update(programStr, false);
-            if (logToDisplay) Console.WriteLine(flow);
+            if (LogToDisplay)
+            {
+                Console.WriteLine(flow);
+            }
 
             Assert.IsTrue(flow.HasCodePath(1, 4));
             Assert.IsFalse(flow.HasCodePath(5, 4));
@@ -288,32 +328,35 @@ namespace unit_tests_asm_z3
 
             StaticFlow flow = new StaticFlow(new Tools());
             flow.Update(programStr);
-            if (logToDisplay) Console.WriteLine(flow);
+            if (LogToDisplay)
+            {
+                Console.WriteLine(flow);
+            }
 
             {
-                var (IsLoopBranchPoint, BranchToExitLoop) = flow.Is_Loop_Branch_Point(0);
-                Assert.IsFalse(IsLoopBranchPoint);
+                (bool isLoopBranchPoint, bool branchToExitLoop) = flow.Is_Loop_Branch_Point(0);
+                Assert.IsFalse(isLoopBranchPoint);
             }
             {
-                var (IsLoopBranchPoint, BranchToExitLoop) = flow.Is_Loop_Branch_Point(1);
-                Assert.IsFalse(IsLoopBranchPoint);
+                (bool isLoopBranchPoint, bool branchToExitLoop) = flow.Is_Loop_Branch_Point(1);
+                Assert.IsFalse(isLoopBranchPoint);
             }
             {
-                var (IsLoopBranchPoint, BranchToExitLoop) = flow.Is_Loop_Branch_Point(2);
-                Assert.IsFalse(IsLoopBranchPoint);
+                (bool isLoopBranchPoint, bool branchToExitLoop) = flow.Is_Loop_Branch_Point(2);
+                Assert.IsFalse(isLoopBranchPoint);
             }
             {
-                var (IsLoopBranchPoint, BranchToExitLoop) = flow.Is_Loop_Branch_Point(3);
-                Assert.IsFalse(IsLoopBranchPoint);
+                (bool isLoopBranchPoint, bool branchToExitLoop) = flow.Is_Loop_Branch_Point(3);
+                Assert.IsFalse(isLoopBranchPoint);
             }
             {
-                var (IsLoopBranchPoint, BranchToExitLoop) = flow.Is_Loop_Branch_Point(4);
-                Assert.IsTrue(IsLoopBranchPoint);
-                Assert.IsFalse(BranchToExitLoop);
+                (bool isLoopBranchPoint, bool branchToExitLoop) = flow.Is_Loop_Branch_Point(4);
+                Assert.IsTrue(isLoopBranchPoint);
+                Assert.IsFalse(branchToExitLoop);
             }
             {
-                var (IsLoopBranchPoint, BranchToExitLoop) = flow.Is_Loop_Branch_Point(5);
-                Assert.IsFalse(IsLoopBranchPoint);
+                (bool isLoopBranchPoint, bool branchToExitLoop) = flow.Is_Loop_Branch_Point(5);
+                Assert.IsFalse(isLoopBranchPoint);
             }
         }
 
@@ -330,32 +373,35 @@ namespace unit_tests_asm_z3
 
             StaticFlow flow = new StaticFlow(new Tools());
             flow.Update(programStr, false);
-            if (logToDisplay) Console.WriteLine(flow);
+            if (LogToDisplay)
+            {
+                Console.WriteLine(flow);
+            }
 
             {
-                var (IsLoopMergePoint, LoopLineNumber) = flow.Is_Loop_Merge_Point(0);
-                Assert.IsFalse(IsLoopMergePoint);
+                (bool isLoopMergePoint, int loopLineNumber) = flow.Is_Loop_Merge_Point(0);
+                Assert.IsFalse(isLoopMergePoint);
             }
             {
-                var (IsLoopMergePoint, LoopLineNumber) = flow.Is_Loop_Merge_Point(1);
-                Assert.IsTrue(IsLoopMergePoint);
-                //Assert.IsFalse(v.BranchToExitLoop);
+                (bool isLoopMergePoint, int loopLineNumber) = flow.Is_Loop_Merge_Point(1);
+                Assert.IsTrue(isLoopMergePoint);
+                // Assert.IsFalse(v.BranchToExitLoop);
             }
             {
-                var (IsLoopMergePoint, LoopLineNumber) = flow.Is_Loop_Merge_Point(2);
-                Assert.IsFalse(IsLoopMergePoint);
+                (bool isLoopMergePoint, int loopLineNumber) = flow.Is_Loop_Merge_Point(2);
+                Assert.IsFalse(isLoopMergePoint);
             }
             {
-                var (IsLoopMergePoint, LoopLineNumber) = flow.Is_Loop_Merge_Point(3);
-                Assert.IsFalse(IsLoopMergePoint);
+                (bool isLoopMergePoint, int loopLineNumber) = flow.Is_Loop_Merge_Point(3);
+                Assert.IsFalse(isLoopMergePoint);
             }
             {
-                var (IsLoopMergePoint, LoopLineNumber) = flow.Is_Loop_Merge_Point(4);
-                Assert.IsFalse(IsLoopMergePoint);
+                (bool isLoopMergePoint, int loopLineNumber) = flow.Is_Loop_Merge_Point(4);
+                Assert.IsFalse(isLoopMergePoint);
             }
             {
-                var (IsLoopMergePoint, LoopLineNumber) = flow.Is_Loop_Merge_Point(5);
-                Assert.IsFalse(IsLoopMergePoint);
+                (bool isLoopMergePoint, int loopLineNumber) = flow.Is_Loop_Merge_Point(5);
+                Assert.IsFalse(isLoopMergePoint);
             }
         }
     }

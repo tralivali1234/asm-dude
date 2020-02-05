@@ -1,17 +1,17 @@
 ﻿// The MIT License (MIT)
 //
-// Copyright (c) 2018 Henk-Jan Lebbink
-// 
+// Copyright (c) 2019 Henk-Jan Lebbink
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,52 +20,109 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using AsmTools;
-using System;
-using System.Collections.Generic;
-using System.IO;
-
 namespace AsmDude.Tools
 {
-    public struct PerformanceItem
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using AsmTools;
+
+    public struct PerformanceItem : IEquatable<PerformanceItem>
     {
-        public MicroArch _microArch;
-        public Mnemonic _instr;
-        public string _args;
+        public MicroArch microArch_;
+        public Mnemonic instr_;
+        public string args_;
 
-        public string _mu_Ops_Merged;
-        public string _mu_Ops_Fused;
-        public string _mu_Ops_Port;
+        public string mu_Ops_Merged_;
+        public string mu_Ops_Fused_;
+        public string mu_Ops_Port_;
 
-        public string _latency;
-        public string _throughput;
-        public string _remark;
+        public string latency_;
+        public string throughput_;
+        public string remark_;
+
+        public override bool Equals(object obj)
+        {
+            //Check for null and compare run-time types.
+            if ((obj == null) || !this.GetType().Equals(obj.GetType()))
+            {
+                return false;
+            }
+            else
+            {
+                PerformanceItem p = (PerformanceItem)obj;
+                return (this.microArch_ == p.microArch_) && (this.instr_ == p.instr_) && (this.args_ == p.args_);
+            }
+        }
+
+        public override int GetHashCode()
+        {
+            return this.microArch_.GetHashCode() ^ this.instr_.GetHashCode() ^ this.args_.GetHashCode();
+        }
+
+        public static bool operator ==(PerformanceItem left, PerformanceItem right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(PerformanceItem left, PerformanceItem right)
+        {
+            return !(left == right);
+        }
+
+        public bool Equals(PerformanceItem other)
+        {
+            return this == other;
+        }
     }
 
     public class PerformanceStore
     {
-        private readonly IList<PerformanceItem> _data;
+        private readonly IList<PerformanceItem> data_;
 
         public PerformanceStore(string path)
         {
-            this._data = new List<PerformanceItem>();
+            this.data_ = new List<PerformanceItem>();
 
-            MicroArch selectedMicroarchitures = AsmDudeToolsStatic.Get_MicroArch_Switched_On();
-            if (selectedMicroarchitures != MicroArch.NONE)
+            if (Settings.Default.PerformanceInfo_On)
             {
-                var translations = this.Load_Instruction_Translation(path + "Instructions-Translations.tsv");
-                if (selectedMicroarchitures.HasFlag(MicroArch.IvyBridge)) this.AddData(MicroArch.IvyBridge, path + "IvyBridge.tsv", translations);
-                if (selectedMicroarchitures.HasFlag(MicroArch.Haswell)) this.AddData(MicroArch.Haswell, path + "Haswell.tsv", translations);
-                if (selectedMicroarchitures.HasFlag(MicroArch.Broadwell)) this.AddData(MicroArch.Broadwell, path + "Broadwell.tsv", translations);
-                if (selectedMicroarchitures.HasFlag(MicroArch.Skylake)) this.AddData(MicroArch.Skylake, path + "Skylake.tsv", translations);
+                MicroArch selectedMicroarchitures = AsmDudeToolsStatic.Get_MicroArch_Switched_On();
+                if (selectedMicroarchitures != MicroArch.NONE)
+                {
+                    IDictionary<string, IList<Mnemonic>> translations = this.Load_Instruction_Translation(path + "Instructions-Translations.tsv");
+                    if (selectedMicroarchitures.HasFlag(MicroArch.IvyBridge))
+                    {
+                        this.AddData(MicroArch.IvyBridge, path + "IvyBridge.tsv", translations);
+                    }
+
+                    if (selectedMicroarchitures.HasFlag(MicroArch.Haswell))
+                    {
+                        this.AddData(MicroArch.Haswell, path + "Haswell.tsv", translations);
+                    }
+
+                    if (selectedMicroarchitures.HasFlag(MicroArch.Broadwell))
+                    {
+                        this.AddData(MicroArch.Broadwell, path + "Broadwell.tsv", translations);
+                    }
+
+                    if (selectedMicroarchitures.HasFlag(MicroArch.Skylake))
+                    {
+                        this.AddData(MicroArch.Skylake, path + "Skylake.tsv", translations);
+                    }
+
+                    if (selectedMicroarchitures.HasFlag(MicroArch.SkylakeX))
+                    {
+                        this.AddData(MicroArch.SkylakeX, path + "SkylakeX.tsv", translations);
+                    }
+                }
             }
         }
 
         public IEnumerable<PerformanceItem> GetPerformance(Mnemonic mnemonic, MicroArch selectedArchitectures)
         {
-            foreach (PerformanceItem item in this._data)
+            foreach (PerformanceItem item in this.data_)
             {
-                if ((item._instr == mnemonic) && selectedArchitectures.HasFlag(item._microArch))
+                if ((item.instr_ == mnemonic) && selectedArchitectures.HasFlag(item.microArch_))
                 {
                     yield return item;
                 }
@@ -78,11 +135,13 @@ namespace AsmDude.Tools
             //AsmDudeToolsStatic.Output_INFO("PerformanceStore:AddData_New: microArch=" + microArch + "; filename=" + filename);
             try
             {
-                System.IO.StreamReader file = new System.IO.StreamReader(filename);
+                StreamReader file = new StreamReader(filename);
                 string line;
+                int lineNumber = 0;
+
                 while ((line = file.ReadLine()) != null)
                 {
-                    if ((line.Trim().Length > 0) && (!line.StartsWith(";")))
+                    if ((line.Trim().Length > 0) && (!line.StartsWith(";", StringComparison.Ordinal)))
                     {
                         string[] columns = line.Split('\t');
                         if (columns.Length == 8)
@@ -94,10 +153,20 @@ namespace AsmDude.Tools
                                     mnemonics = new List<Mnemonic>();
                                     foreach (string mnemonicStr in mnemonicKey.Split(' '))
                                     {
-                                        Mnemonic mnemonic = AsmSourceTools.ParseMnemonic(mnemonicStr);
+                                        Mnemonic mnemonic = AsmSourceTools.ParseMnemonic(mnemonicStr, false);
                                         if (mnemonic == Mnemonic.NONE)
-                                        {
-                                            AsmDudeToolsStatic.Output_WARNING("PerformanceStore:LoadData: microArch=" + microArch + ": unknown mnemonic " + mnemonicStr + " in line: " + line);
+                                        { // check if the mnemonicStr can be translated to a list of mnemonics
+                                            if (translations.TryGetValue(mnemonicStr, out IList<Mnemonic> mnemonics2))
+                                            {
+                                                foreach (Mnemonic m in mnemonics2)
+                                                {
+                                                    mnemonics.Add(m);
+                                                }
+                                            }
+                                            else
+                                            {
+                                                AsmDudeToolsStatic.Output_WARNING("PerformanceStore:AddData: microArch=" + microArch + ": unknown mnemonic " + mnemonicStr + " in line " + lineNumber + " with content \"" + line + "\".");
+                                            }
                                         }
                                         else
                                         {
@@ -107,17 +176,17 @@ namespace AsmDude.Tools
                                 }
                                 foreach (Mnemonic m in mnemonics)
                                 {
-                                    this._data.Add(new PerformanceItem()
+                                    this.data_.Add(new PerformanceItem()
                                     {
-                                        _microArch = microArch,
-                                        _instr = m,
-                                        _args = columns[1],
-                                        _mu_Ops_Fused = columns[2],
-                                        _mu_Ops_Merged = columns[3],
-                                        _mu_Ops_Port = columns[4],
-                                        _latency = columns[5],
-                                        _throughput = columns[6],
-                                        _remark = columns[7]
+                                        microArch_ = microArch,
+                                        instr_ = m,
+                                        args_ = columns[1],
+                                        mu_Ops_Fused_ = columns[2],
+                                        mu_Ops_Merged_ = columns[3],
+                                        mu_Ops_Port_ = columns[4],
+                                        latency_ = columns[5],
+                                        throughput_ = columns[6],
+                                        remark_ = columns[7],
                                     });
                                 }
                             }
@@ -127,6 +196,7 @@ namespace AsmDude.Tools
                             AsmDudeToolsStatic.Output_WARNING("PerformanceStore:AddData: found " + columns.Length + " columns; funky line" + line);
                         }
                     }
+                    lineNumber++;
                 }
                 file.Close();
             }
@@ -145,11 +215,11 @@ namespace AsmDude.Tools
             IDictionary<string, IList<Mnemonic>> translations = new Dictionary<string, IList<Mnemonic>>();
             try
             {
-                System.IO.StreamReader file = new System.IO.StreamReader(filename);
+                StreamReader file = new StreamReader(filename);
                 string line;
                 while ((line = file.ReadLine()) != null)
                 {
-                    if ((line.Trim().Length > 0) && (!line.StartsWith(";")))
+                    if ((line.Trim().Length > 0) && (!line.StartsWith(";", StringComparison.Ordinal)))
                     {
                         string[] columns = line.Split('\t');
                         if (columns.Length == 2)
@@ -159,10 +229,10 @@ namespace AsmDude.Tools
                             IList<Mnemonic> values = new List<Mnemonic>();
                             foreach (string mnemonicStr in columns[1].Trim().Split(' '))
                             {
-                                Mnemonic mnemonic = AsmSourceTools.ParseMnemonic(mnemonicStr);
+                                Mnemonic mnemonic = AsmSourceTools.ParseMnemonic(mnemonicStr, false);
                                 if (mnemonic == Mnemonic.NONE)
                                 {
-                                    AsmDudeToolsStatic.Output_WARNING("PerformanceStore:LoadData: key=" + columns[0] + ": unknown mnemonic " + mnemonicStr + " in line: " + line);
+                                    AsmDudeToolsStatic.Output_WARNING("PerformanceStore:Load_Instruction_Translation: key=" + columns[0] + ": unknown mnemonic " + mnemonicStr + " in line: " + line);
                                 }
                                 else
                                 {
@@ -170,7 +240,14 @@ namespace AsmDude.Tools
                                 }
                             }
                             //AsmDudeToolsStatic.Output_INFO("PerformanceStore:Load_Instruction_Translation: key=" + key + " = " + String.Join(",", values));
-                            translations.Add(key, values);
+                            if (translations.ContainsKey(key))
+                            {
+                                AsmDudeToolsStatic.Output_WARNING("PerformanceStore:Load_Instruction_Translation: key=" + key + " in line: " + line + " already used");
+                            }
+                            else
+                            {
+                                translations.Add(key, values);
+                            }
                         }
                     }
                 }

@@ -1,7 +1,7 @@
 ﻿// The MIT License (MIT)
 //
-// Copyright (c) 2017 Henk-Jan Lebbink
-// 
+// Copyright (c) 2019 Henk-Jan Lebbink
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
@@ -20,34 +20,59 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-
-using System;
-
 namespace AsmTools
 {
+    using System;
+    using System.Collections.Generic;
 
     public enum RegisterType
     {
-        UNKNOWN, BIT8, BIT16, BIT32, BIT64, MMX, XMM, YMM, ZMM, SEGMENT, OPMASK, CONTROL, DEBUG, BOUND
+        UNKNOWN,
+        BIT8,
+        BIT16,
+        BIT32,
+        BIT64,
+        MMX,
+        XMM,
+        YMM,
+        ZMM,
+        SEGMENT,
+        OPMASK,
+        CONTROL,
+        DEBUG,
+        BOUND,
     }
 
     public static class RegisterTools
     {
-        public static (bool Valid, Rn Reg, int NBits) ToRn(string str, bool isCapitals = false)
+        private static readonly Dictionary<string, Rn> Register_cache_;
+
+        /// <summary>Static class initializer for RegisterTools</summary>
+        static RegisterTools()
         {
-            Rn rn = RegisterTools.ParseRn(str, isCapitals);
-            return (rn == Rn.NOREG)
-                ? (Valid: false, Reg: Rn.NOREG, NBits: 0)
-                : (Valid: true, Reg: rn, NBits: RegisterTools.NBits(rn));
+            Register_cache_ = new Dictionary<string, Rn>();
+            foreach (Rn rn in Enum.GetValues(typeof(Rn)))
+            {
+                Register_cache_.Add(rn.ToString(), rn);
+            }
         }
 
-        public static Rn ParseRn(string str, bool isCapitals = false)
+        public static (bool valid, Rn reg, int nBits) ToRn(string str, bool isCapitals = false)
         {
-            #if DEBUG
-            if (isCapitals && (str != str.ToUpper())) throw new Exception();
-            #endif
+            Rn rn = ParseRn(str, isCapitals);
+            return (rn == Rn.NOREG)
+                ? (valid: false, reg: Rn.NOREG, nBits: 0)
+                : (valid: true, reg: rn, nBits: NBits(rn));
+        }
 
-            switch ((isCapitals) ? str : str.ToUpper())
+        public static Rn ParseRn(string str, bool strIsCapitals = false)
+        {
+            return (Register_cache_.TryGetValue(AsmSourceTools.ToCapitals(str, strIsCapitals), out Rn value)) ? value : Rn.NOREG;
+        }
+
+        public static Rn ParseRn_OLD(string str, bool strIsCapitals = false)
+        {
+            switch (AsmSourceTools.ToCapitals(str, strIsCapitals))
             {
                 case "RAX": return Rn.RAX;
                 case "EAX": return Rn.EAX;
@@ -295,6 +320,11 @@ namespace AsmTools
             }
         }
 
+        public static bool IsRn(string str, bool strIsCapitals = false)
+        {
+            return Register_cache_.ContainsKey(AsmSourceTools.ToCapitals(str, strIsCapitals));
+        }
+
         public static int NBits(Rn rn)
         {
             switch (rn)
@@ -509,8 +539,6 @@ namespace AsmTools
         /// <summary>
         /// return regular pattern to select the provided register and aliased register names
         /// </summary>
-        /// <param name="reg"></param>
-        /// <returns></returns>
         public static string GetRelatedRegister(Rn reg)
         {
             switch (reg)
@@ -752,7 +780,7 @@ namespace AsmTools
 
         public static bool IsRegister(string keyword, bool strIsCapitals = false)
         {
-            return RegisterTools.ParseRn(keyword, strIsCapitals) != Rn.NOREG;
+            return Register_cache_.ContainsKey(AsmSourceTools.ToCapitals(keyword, strIsCapitals));
         }
 
         public static RegisterType GetRegisterType(Rn rn)
@@ -997,7 +1025,6 @@ namespace AsmTools
 
                 default:
                     break;
-
             }
             return RegisterType.UNKNOWN;
         }
@@ -1092,7 +1119,7 @@ namespace AsmTools
             }
         }
 
-        /// <summary> 
+        /// <summary>
         /// Get the 64 bits register that belongs to the provided register. eg. ax return rax
         /// </summary>
         public static Rn Get64BitsRegister(Rn rn)
@@ -1541,7 +1568,7 @@ namespace AsmTools
                 case Rn.R15W:
                 case Rn.R15B:
                 case Rn.FS:
-                case Rn.GS: return Arch.X64;
+                case Rn.GS: return Arch.ARCH_X64;
 
                 case Rn.MM0:
                 case Rn.MM1:
@@ -1550,7 +1577,7 @@ namespace AsmTools
                 case Rn.MM4:
                 case Rn.MM5:
                 case Rn.MM6:
-                case Rn.MM7: return Arch.MMX;
+                case Rn.MM7: return Arch.ARCH_MMX;
 
                 case Rn.XMM0:
                 case Rn.XMM1:
@@ -1559,7 +1586,7 @@ namespace AsmTools
                 case Rn.XMM4:
                 case Rn.XMM5:
                 case Rn.XMM6:
-                case Rn.XMM7: return Arch.SSE;
+                case Rn.XMM7: return Arch.ARCH_SSE;
 
                 case Rn.XMM8:
                 case Rn.XMM9:
@@ -1568,7 +1595,7 @@ namespace AsmTools
                 case Rn.XMM12:
                 case Rn.XMM13:
                 case Rn.XMM14:
-                case Rn.XMM15: return Arch.X64;
+                case Rn.XMM15: return Arch.ARCH_X64;
 
                 case Rn.YMM0:
                 case Rn.YMM1:
@@ -1586,7 +1613,7 @@ namespace AsmTools
                 case Rn.YMM13:
                 case Rn.YMM14:
                 case Rn.YMM15:
-                case Rn.YMM16: return Arch.AVX;
+                case Rn.YMM16: return Arch.ARCH_AVX;
 
                 case Rn.ZMM0:
                 case Rn.ZMM1:
@@ -1627,7 +1654,7 @@ namespace AsmTools
                 case Rn.K4:
                 case Rn.K5:
                 case Rn.K6:
-                case Rn.K7: return Arch.AVX512_F;
+                case Rn.K7: return Arch.ARCH_AVX512_F;
 
                 case Rn.XMM16:
                 case Rn.XMM17:
@@ -1660,14 +1687,14 @@ namespace AsmTools
                 case Rn.YMM28:
                 case Rn.YMM29:
                 case Rn.YMM30:
-                case Rn.YMM31: return Arch.AVX512_VL;
+                case Rn.YMM31: return Arch.ARCH_AVX512_VL;
 
                 case Rn.BND0:
                 case Rn.BND1:
                 case Rn.BND2:
-                case Rn.BND3: return Arch.MPX;
+                case Rn.BND3: return Arch.ARCH_MPX;
 
-                default: return Arch.NONE;
+                default: return Arch.ARCH_NONE;
             }
         }
 
@@ -1688,6 +1715,7 @@ namespace AsmTools
                 default: return false;
             }
         }
+
         public static bool IsBoundRegister(Rn rn)
         {
             switch (rn)
@@ -1700,6 +1728,7 @@ namespace AsmTools
                 default: return false;
             }
         }
+
         public static bool IsControlRegister(Rn rn)
         {
             switch (rn)
@@ -1717,6 +1746,7 @@ namespace AsmTools
                     return false;
             }
         }
+
         public static bool IsDebugRegister(Rn rn)
         {
             switch (rn)
@@ -1733,6 +1763,7 @@ namespace AsmTools
                     return false;
             }
         }
+
         public static bool IsSegmentRegister(Rn rn)
         {
             switch (rn)
@@ -1747,6 +1778,7 @@ namespace AsmTools
                     return false;
             }
         }
+
         public static bool IsGeneralPurposeRegister(Rn rn)
         {
             switch (rn)
@@ -1823,6 +1855,7 @@ namespace AsmTools
                 default: return false;
             }
         }
+
         public static bool IsMmxRegister(Rn rn)
         {
             switch (rn)
@@ -1838,6 +1871,7 @@ namespace AsmTools
                 default: return false;
             }
         }
+
         public static bool Is_SIMD_Register(Rn rn)
         {
             switch (rn)
@@ -1943,6 +1977,7 @@ namespace AsmTools
                     return false;
             }
         }
+
         public static bool IsSseRegister(Rn rn)
         {
             switch (rn)
@@ -1983,6 +2018,7 @@ namespace AsmTools
                 default: return false;
             }
         }
+
         public static bool IsAvxRegister(Rn rn)
         {
             switch (rn)
@@ -2023,6 +2059,7 @@ namespace AsmTools
                 default: return false;
             }
         }
+
         public static bool IsAvx512Register(Rn rn)
         {
             switch (rn)

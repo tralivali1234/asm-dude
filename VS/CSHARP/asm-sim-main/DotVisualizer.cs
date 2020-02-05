@@ -1,7 +1,7 @@
 ﻿// The MIT License (MIT)
 //
-// Copyright (c) 2017 Henk-Jan Lebbink
-// 
+// Copyright (c) 2019 Henk-Jan Lebbink
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
@@ -20,53 +20,59 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using QuickGraph;
-using QuickGraph.Graphviz;
-using QuickGraph.Graphviz.Dot;
-using System.Drawing;
-using System.IO;
-using System.Windows.Forms;
-
 namespace AsmSim
 {
+    using System.Diagnostics.Contracts;
+    using System.Drawing;
+    using System.Globalization;
+    using System.IO;
+    using System.Windows.Forms;
+    using QuickGraph;
+    using QuickGraph.Graphviz;
+    using QuickGraph.Graphviz.Dot;
+
     public static class DotVisualizer
     {
         public static void SaveToDot(StaticFlow sFlow, DynamicFlow dFlow, string filename)
         {
-            var displayGraph = new QuickGraph.AdjacencyGraph<string, TaggedEdge<string, string>>();
+            Contract.Requires(sFlow != null);
+            Contract.Requires(dFlow != null);
 
-            foreach (var vertex in dFlow.Graph.Vertices)
+            AdjacencyGraph<string, TaggedEdge<string, string>> displayGraph = new AdjacencyGraph<string, TaggedEdge<string, string>>();
+
+            foreach (string vertex in dFlow.Graph.Vertices)
             {
                 displayGraph.AddVertex(vertex);
             }
-            foreach (var edge in dFlow.Graph.Edges)
+            foreach (TaggedEdge<string, (bool branch, StateUpdate stateUpdate)> edge in dFlow.Graph.Edges)
             {
                 int lineNumber = dFlow.LineNumber(edge.Source);
-                string displayInfo = sFlow.Get_Line_Str(lineNumber) + "\n" + edge.Tag.StateUpdate.ToString2();
+                string displayInfo = sFlow.Get_Line_Str(lineNumber) + "\n" + edge.Tag.stateUpdate.ToString2();
                 displayGraph.AddEdge(new TaggedEdge<string, string>(edge.Source, edge.Target, displayInfo));
             }
-            DotVisualizer.Visualize(displayGraph, filename);
+            Visualize(displayGraph, filename);
         }
 
         public static void ShowPicture(string filename)
         {
-            var f = new Form();
-            //f.FormBorderStyle = FormBorderStyle.None;
-
-            var picture = new PictureBox()
+            using (Form f = new Form())
             {
-                ImageLocation = filename,
-                SizeMode = PictureBoxSizeMode.Normal,
-                Dock = DockStyle.Fill,
-                Size = new Size(100, 300)
-            };
-            f.Controls.Add(picture);
-            f.Size = picture.Size;
+                // f.FormBorderStyle = FormBorderStyle.None;
 
+                PictureBox picture = new PictureBox()
+                {
+                    ImageLocation = filename,
+                    SizeMode = PictureBoxSizeMode.Normal,
+                    Dock = DockStyle.Fill,
+                    Size = new Size(100, 300),
+                };
+                f.Controls.Add(picture);
+                f.Size = picture.Size;
 
-            f.ShowDialog();
-            f.Refresh();
-            f.Show();
+                f.ShowDialog();
+                f.Refresh();
+                f.Show();
+            }
         }
 
         public static void Visualize(
@@ -74,27 +80,30 @@ namespace AsmSim
             string fileName,
             string dir = @"C:\Temp\AsmSim")
         {
-            var fullFileName = Path.Combine(dir, fileName);
-            var viz = new GraphvizAlgorithm<string, TaggedEdge<string, string>>(graph);
+            string fullFileName = Path.Combine(dir, fileName);
+            GraphvizAlgorithm<string, TaggedEdge<string, string>> viz = new GraphvizAlgorithm<string, TaggedEdge<string, string>>(graph);
 
             viz.FormatVertex += VizFormatVertex;
             viz.FormatEdge += MyEdgeFormatter;
             viz.Generate(new FileDotEngine(), fullFileName);
         }
 
-        static void MyEdgeFormatter(object sender, FormatEdgeEventArgs<string, TaggedEdge<string, string>> e)
+        private static void MyEdgeFormatter(object sender, FormatEdgeEventArgs<string, TaggedEdge<string, string>> e)
         {
-            var label = new GraphvizEdgeLabel();
-            label.Value = e.Edge.Tag;
+            GraphvizEdgeLabel label = new GraphvizEdgeLabel
+            {
+                Value = e.Edge.Tag,
+            };
             e.EdgeFormatter.Label = label;
         }
 
-        static void VizFormatVertex(object sender, FormatVertexEventArgs<string> e)
+        private static void VizFormatVertex(object sender, FormatVertexEventArgs<string> e)
         {
-            e.VertexFormatter.Label = e.Vertex.ToString();
+            Contract.Requires(e != null);
+            e.VertexFormatter.Label = e.Vertex.ToString(CultureInfo.InvariantCulture);
         }
 
-        public sealed class FileDotEngine : IDotEngine
+        private sealed class FileDotEngine : IDotEngine
         {
             public string Run(GraphvizImageType imageType, string dot, string outputFileName)
             {
@@ -104,12 +113,12 @@ namespace AsmSim
                 if (true)
                 {
                     // assumes dot.exe is on the path:
-                    var args = string.Format(@"{0} -Tjpg -O", output);
-                    var process = System.Diagnostics.Process.Start("dot.exe", args);
+                    string args = string.Format(CultureInfo.InvariantCulture, @"{0} -Tjpg -O", output);
+                    System.Diagnostics.Process process = System.Diagnostics.Process.Start("dot.exe", args);
                     if (true)
                     {
                         process.WaitForExit();
-                        DotVisualizer.ShowPicture(outputFileName + ".jpg");
+                        ShowPicture(outputFileName + ".jpg");
                     }
                 }
                 return output;

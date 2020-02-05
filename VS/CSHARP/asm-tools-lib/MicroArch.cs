@@ -1,7 +1,7 @@
 ﻿// The MIT License (MIT)
 //
-// Copyright (c) 2017 Henk-Jan Lebbink
-// 
+// Copyright (c) 2019 Henk-Jan Lebbink
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
@@ -20,12 +20,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using System;
-
 namespace AsmTools
 {
+    using System;
+    using System.Diagnostics.Contracts;
+
     [Flags]
-    public enum MicroArch : UInt32
+    public enum MicroArch
     {
         NONE = 0,
         SandyBridge = 1 << 0,
@@ -33,26 +34,30 @@ namespace AsmTools
         Haswell = 1 << 2,
         Broadwell = 1 << 3,
         Skylake = 1 << 4,
-        Kabylake = 1 << 5,
-        Cannonlake = 1 << 6,
-        Icelake = 1 << 7,
-        Tigerlake = 1 << 8,
+        SkylakeX = 1 << 5,
+        Kabylake = 1 << 6,
+        Cannonlake = 1 << 7,
+        Icelake = 1 << 8,
+        Tigerlake = 1 << 9,
 
-        KnightsCorner = 1 << 9,
-        KnightsLanding = 1 << 10
+        KnightsCorner = 1 << 10,
+        KnightsLanding = 1 << 11,
     }
 
     public static partial class AsmSourceTools
     {
-        public static MicroArch ParseMicroArch(string str)
+        public static MicroArch ParseMicroArch(string str, bool strIsCapitals)
         {
-            switch (str.ToUpper())
+            Contract.Requires(str != null);
+
+            switch (ToCapitals(str, strIsCapitals))
             {
                 case "SANDYBRIDGE": return MicroArch.SandyBridge;
                 case "IVYBRIDGE": return MicroArch.IvyBridge;
                 case "HASWELL": return MicroArch.Haswell;
                 case "BROADWELL": return MicroArch.Broadwell;
                 case "SKYLAKE": return MicroArch.Skylake;
+                case "SKYLAKEX": return MicroArch.SkylakeX;
                 case "KABYLAKE": return MicroArch.Kabylake;
                 case "CANNONLAKE": return MicroArch.Cannonlake;
                 case "ICELAKE": return MicroArch.Icelake;

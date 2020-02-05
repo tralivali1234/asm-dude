@@ -1,17 +1,17 @@
 ﻿// The MIT License (MIT)
 //
-// Copyright (c) 2018 Henk-Jan Lebbink
-// 
+// Copyright (c) 2019 Henk-Jan Lebbink
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,64 +20,48 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using System;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
-
-using AsmDude.OptionsPage;
-using AsmDude.Tools;
-
 namespace AsmDude
 {
-    [PackageRegistration(UseManagedResourcesOnly = true)]
+    using System;
+    using System.Diagnostics;
+    using System.Diagnostics.CodeAnalysis;
+    using System.Globalization;
+    using System.Runtime.InteropServices;
+    using System.Threading;
+    using AsmDude.OptionsPage;
+    using AsmDude.Tools;
+    using Microsoft.VisualStudio.Shell;
+
+    [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
     [InstalledProductRegistration("#110", "#112", Vsix.Version, IconResourceID = 400)] // Info on this package for Help/About
-    [ProvideAutoLoad(UIContextGuids.NoSolution)] //load this package once visual studio starts.
     [Guid(PackageGuidString)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
     [ComVisible(false)]
     [ProvideOptionPage(typeof(AsmDudeOptionsPage), "AsmDude", "General", 0, 0, true)]
 
-    public sealed class AsmDudePackage : AsyncPackage {
-
+    public sealed class AsmDudePackage : AsyncPackage
+    {
         #region Global Constants
         public const string PackageGuidString = "27e0e7ef-ecaf-4b87-a574-6a909383f99f";
 
         internal const string AsmDudeContentType = "asm!";
         internal const string DisassemblyContentType = "Disassembly";
-        internal const double slowWarningThresholdSec = 0.4; // threshold to warn that actions are considered slow
-        internal const double slowShutdownThresholdSec = 4.0; // threshold to switch of components
-        internal const int maxNumberOfCharsInToolTips = 150;
-        internal const int msSleepBeforeAsyncExecution = 1000;
+        internal const double SlowWarningThresholdSec = 0.4; // threshold to warn that actions are considered slow
+        internal const double SlowShutdownThresholdSec = 4.0; // threshold to switch off components
+        internal const int MaxNumberOfCharsInToolTips = 150;
+        internal const int MsSleepBeforeAsyncExecution = 1000;
 
         #endregion Global Constants
 
-        public AsmDudePackage() {
-            Debug.WriteLine(string.Format(CultureInfo.CurrentCulture, "=========================================\nINFO: AsmDudePackage: Entering constructor"));
-            //AsmDudeToolsStatic.Output_INFO("AsmDudePackage: Entering constructor");
-        }
-#pragma warning disable 1998
-        protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
-#pragma warning restore 1998
+        public AsmDudePackage()
         {
-            StringBuilder sb = new StringBuilder();
-            sb.Append("Welcome to\n");
-            sb.Append(" _____             ____        _     \n");
-            sb.Append("|  _  |___ _____  |    \\ _ _ _| |___ \n");
-            sb.Append("|     |_ -|     | |  |  | | | . | -_|\n");
-            sb.Append("|__|__|___|_|_|_| |____/|___|___|___|\n");
-            sb.Append("INFO: Loaded AsmDude version " + typeof(AsmDudePackage).Assembly.GetName().Version + " (" + ApplicationInformation.CompileDate.ToString() + ")\n");
-            sb.Append("INFO: Open source assembly extension. Making programming in assembler almost bearable.\n");
-            sb.Append("INFO: More info at https://github.com/HJLebbink/asm-dude \n");
-            sb.Append("----------------------------------");
-            AsmDudeToolsStatic.Output(sb.ToString());
+            Debug.WriteLine(string.Format(CultureInfo.CurrentCulture, "=========================================\nINFO: AsmDudePackage: Entering constructor"));
+            AsmDudeToolsStatic.Output_INFO("AsmDudePackage: Entering constructor");
+        }
 
+        protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
+        {
+            await base.InitializeAsync(cancellationToken, progress).ConfigureAwait(true);
             ClearMefCache.ClearMefCache.Initialize(this);
         }
 
@@ -87,7 +71,7 @@ namespace AsmDude
             //IDebugDisassemblyStream2
             //https://msdn.microsoft.com/en-us/library/bb145934(v=vs.110).aspx
 
-            
+
             DTE vsEnvironment = (DTE)GetService(typeof(SDTE));
             vsEnvironment.ExecuteCommand("Debug.Disassembly");
 
@@ -104,7 +88,7 @@ namespace AsmDude
         /// tools>options>Environment>Fonts and Colors>statement completion>courier new.
         /// https://msdn.microsoft.com/en-us/library/bb166382.aspx
         /// </summary>
-        /// 
+        ///
 
         /*
         private void changeFontAutoComplete() {
@@ -116,7 +100,7 @@ namespace AsmDude
                     EnvDTE.Properties asmDudePropertiesList = vsEnvironment.get_Properties("AsmDude", "Asm Documentation");
                     if (asmDudePropertiesList != null) {
                         string url = asmDudePropertiesList.Item("_asmDocUrl").Value as string;
-                        AsmDudeToolsStatic.Output_INFO(string.Format("{0}:changeFontAutoComplete. url=", this.ToString(), url));
+                        AsmDudeToolsStatic.Output_INFO(string.Format(AsmDudeToolsStatic.CultureUI, "{0}:changeFontAutoComplete. url=", this.ToString(), url));
                     }
                 }
                 if (false) {
@@ -228,7 +212,7 @@ namespace AsmDude
         }
 
         /// <summary>
-        /// This function prints text on the debug ouput and on the generic pane of the 
+        /// This function prints text on the debug ouput and on the generic pane of the
         /// Output window.
         /// </summary>
         /// <param name="text"></param>
@@ -291,7 +275,7 @@ namespace AsmDude
                 return;
 
             // This is one of our commands. Now what we want to do is to switch the visibility status
-            // of the two menus with dynamic visibility, so that if the user clicks on one, then this 
+            // of the two menus with dynamic visibility, so that if the user clicks on one, then this
             // will make it invisible and the other one visible.
             if (command.CommandID.ID == PkgCmdIDList.cmdidDynVisibility1) {
                 // The user clicked on the first one; make it invisible and show the second one.

@@ -1,33 +1,57 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using AsmSim;
-using Microsoft.Z3;
-using AsmTools;
-using System.Diagnostics;
-using System.Collections.Generic;
+﻿// The MIT License (MIT)
+//
+// Copyright (c) 2019 Henk-Jan Lebbink
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
 namespace unit_tests_asm_z3
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Globalization;
+    using AsmSim;
+    using AsmTools;
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Microsoft.Z3;
+
     [TestClass]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "<Pending>")]
     public class Test_MemZ3
     {
-        const bool logToDisplay = TestTools.LOG_TO_DISPLAY;
+        private const bool LogToDisplay = AsmTestTools.LOG_TO_DISPLAY;
 
-        private Tools CreateTools(int timeOut = TestTools.DEFAULT_TIMEOUT)
+        private static Tools CreateTools(int timeOut = AsmTestTools.DEFAULT_TIMEOUT)
         {
-            /* The following parameters can be set: 
+            /* The following parameters can be set:
                     - proof (Boolean) Enable proof generation
                     - debug_ref_count (Boolean) Enable debug support for Z3_ast reference counting
-                    - trace (Boolean) Tracing support for VCC 
-                    - trace_file_name (String) Trace out file for VCC traces 
-                    - timeout (unsigned) default timeout (in milliseconds) used for solvers 
-                    - well_sorted_check type checker 
-                    - auto_config use heuristics to automatically select solver and configure it 
-                    - model model generation for solvers, this parameter can be overwritten when creating a solver 
-                    - model_validate validate models produced by solvers 
-                    - unsat_core unsat-core generation for solvers, this parameter can be overwritten when creating 
-                            a solver Note that in previous versions of Z3, this constructor was also used to set 
-                            global and module parameters. For this purpose we should now use 
+                    - trace (Boolean) Tracing support for VCC
+                    - trace_file_name (String) Trace out file for VCC traces
+                    - timeout (unsigned) default timeout (in milliseconds) used for solvers
+                    - well_sorted_check type checker
+                    - auto_config use heuristics to automatically select solver and configure it
+                    - model model generation for solvers, this parameter can be overwritten when creating a solver
+                    - model_validate validate models produced by solvers
+                    - unsat_core unsat-core generation for solvers, this parameter can be overwritten when creating
+                            a solver Note that in previous versions of Z3, this constructor was also used to set
+                            global and module parameters. For this purpose we should now use
                             Microsoft.Z3.Global.SetParameter(System.String,System.String)
             */
 
@@ -36,7 +60,7 @@ namespace unit_tests_asm_z3
                 { "unsat_core", "false" },    // enable generation of unsat cores
                 { "model", "false" },         // enable model generation
                 { "proof", "false" },         // enable proof generation
-                { "timeout", timeOut.ToString() }
+                { "timeout", timeOut.ToString(CultureInfo.InvariantCulture) },
             };
             return new Tools(settings);
         }
@@ -45,12 +69,12 @@ namespace unit_tests_asm_z3
         {
             Tools tools = CreateTools();
             tools.StateConfig = stateConfig;
-            return CreateState(tools);
+            return this.CreateState(tools);
         }
 
         private State CreateState(Tools tools)
         {
-            string tailKey = "!0";// Tools.CreateKey(tools.Rand);
+            string tailKey = "!0"; // Tools.CreateKey(tools.Rand);
             string headKey = tailKey;
             return new State(tools, tailKey, headKey);
         }
@@ -62,9 +86,9 @@ namespace unit_tests_asm_z3
             stateConfig.Set_All_Off();
             stateConfig.RAX = true;
             stateConfig.RBX = true;
-            stateConfig.mem = true;
+            stateConfig.Mem = true;
 
-            State state = CreateState(stateConfig);
+            State state = this.CreateState(stateConfig);
             Context ctx = state.Ctx;
             Tools tools = state.Tools;
 
@@ -78,7 +102,7 @@ namespace unit_tests_asm_z3
             }
             BitVecExpr value2 = state.Create_Mem(address1, 8);
 
-            if (logToDisplay)
+            if (LogToDisplay)
             {
                 Console.WriteLine("value1 = " + value1);
                 Console.WriteLine("value2 = " + value2);
@@ -95,9 +119,9 @@ namespace unit_tests_asm_z3
             stateConfig.RAX = true;
             stateConfig.R8 = true;
             stateConfig.R9 = true;
-            stateConfig.mem = true;
+            stateConfig.Mem = true;
 
-            State state = CreateState(stateConfig);
+            State state = this.CreateState(stateConfig);
             Context ctx = state.Ctx;
             Tools tools = state.Tools;
 
@@ -118,7 +142,7 @@ namespace unit_tests_asm_z3
             }
             BitVecExpr value2b = state.Create_Mem(address1, 8);
 
-            if (logToDisplay)
+            if (LogToDisplay)
             {
                 Console.WriteLine("value1a = " + value1a);
                 Console.WriteLine("value1b = " + value1b);
@@ -138,35 +162,35 @@ namespace unit_tests_asm_z3
             stateConfig.RAX = true;
             stateConfig.RBX = true;
             stateConfig.RCX = true;
-            stateConfig.mem = true;
+            stateConfig.Mem = true;
 
-            State state = CreateState(stateConfig);
+            State state = this.CreateState(stateConfig);
             Context ctx = state.Ctx;
             Tools tools = state.Tools;
 
             using (StateUpdate updateState = new StateUpdate(state.HeadKey, Tools.CreateKey(tools.Rand), tools))
             {
-                //updateState.Set(Rn.RAX, 20);
+                // updateState.Set(Rn.RAX, 20);
                 updateState.Set(Rn.RBX, 10);
                 updateState.Set(Rn.RCX, 5);
                 state.Update_Forward(updateState);
             }
-            //TestTools.AreEqual(Rn.RAX, 20, state);
-            TestTools.AreEqual(Rn.RBX, 10, state);
-            TestTools.AreEqual(Rn.RCX, 5, state);
+            // TestTools.AreEqual(Rn.RAX, 20, state);
+            AsmTestTools.AreEqual(Rn.RBX, 10, state);
+            AsmTestTools.AreEqual(Rn.RCX, 5, state);
 
             BitVecExpr address1 = Tools.Calc_Effective_Address("qword ptr[rax + 2 * rbx + 10]", state.HeadKey, tools, ctx);
             BitVecExpr address2 = Tools.Calc_Effective_Address("qword ptr[rax + 4 * rcx + 10]", state.HeadKey, tools, ctx);
 
             Tv equalAddresses = state.EqualValues(address1, address2);
-            if (logToDisplay)
+            if (LogToDisplay)
             {
                 Console.WriteLine("equalAddresses=" + equalAddresses);
                 Console.WriteLine("address1 = " + address1);
                 Console.WriteLine("address2 = " + address2);
                 Console.WriteLine(state);
             }
-            TestTools.AreEqual(Tv.ONE, equalAddresses);
+            AsmTestTools.AreEqual(Tv.ONE, equalAddresses);
 
             BitVecExpr value1 = state.Create(Rn.R8);
 
@@ -177,13 +201,13 @@ namespace unit_tests_asm_z3
             }
             BitVecExpr value2 = state.Create_Mem(address2, 8);
 
-            if (logToDisplay)
+            if (LogToDisplay)
             {
                 Console.WriteLine("value1 = " + value1);
                 Console.WriteLine("value2 = " + value2);
                 Console.WriteLine(state);
             }
-            TestTools.AreEqual(Tv.ONE, state.EqualValues(value1, value2));
+            AsmTestTools.AreEqual(Tv.ONE, state.EqualValues(value1, value2));
         }
 
         [TestMethod]
@@ -194,9 +218,9 @@ namespace unit_tests_asm_z3
             stateConfig.RAX = true;
             stateConfig.RBX = true;
             stateConfig.RCX = true;
-            stateConfig.mem = true;
+            stateConfig.Mem = true;
 
-            State state = CreateState(stateConfig);
+            State state = this.CreateState(stateConfig);
             Context ctx = state.Ctx;
             Tools tools = state.Tools;
 
@@ -211,14 +235,14 @@ namespace unit_tests_asm_z3
             BitVecExpr address2 = Tools.Calc_Effective_Address("qword ptr[rax + 4 * rcx + 10]", state.HeadKey, tools, ctx);
             Tv equalAddresses = state.EqualValues(address1, address2);
 
-            if (logToDisplay)
+            if (LogToDisplay)
             {
                 Console.WriteLine("equalAddresses=" + equalAddresses + "; expected = ZERO");
                 Console.WriteLine("address1 = " + address1);
                 Console.WriteLine("address2 = " + address2);
                 Console.WriteLine(state);
             }
-            TestTools.AreEqual(Tv.ZERO, equalAddresses);
+            AsmTestTools.AreEqual(Tv.ZERO, equalAddresses);
 
             BitVecExpr value1 = state.Create(Rn.R8);
             using (StateUpdate updateState = new StateUpdate(state.HeadKey, Tools.CreateKey(tools.Rand), tools))
@@ -230,14 +254,14 @@ namespace unit_tests_asm_z3
             BitVecExpr value2 = state.Create_Mem(address2, 8);
 
             Tv equalValues = state.EqualValues(value1, value2);
-            if (logToDisplay)
+            if (LogToDisplay)
             {
                 Console.WriteLine("equalValues=" + equalValues);
                 Console.WriteLine("value1 = " + value1);
                 Console.WriteLine("value2 = " + value2);
                 Console.WriteLine(state);
             }
-            TestTools.AreEqual(Tv.UNKNOWN, equalValues);
+            AsmTestTools.AreEqual(Tv.UNKNOWN, equalValues);
         }
 
         [TestMethod]
@@ -249,9 +273,9 @@ namespace unit_tests_asm_z3
             stateConfig.RBX = true;
             stateConfig.RCX = true;
             stateConfig.R8 = true;
-            stateConfig.mem = true;
+            stateConfig.Mem = true;
 
-            State state = CreateState(stateConfig);
+            State state = this.CreateState(stateConfig);
             Context ctx = state.Ctx;
             Tools tools = state.Tools;
 
@@ -266,7 +290,7 @@ namespace unit_tests_asm_z3
                 StateUpdate updateState = new StateUpdate(state.HeadKey, Tools.CreateKey(tools.Rand), tools);
                 updateState.Set(Rn.RAX, state.Ctx.MkBVAdd(state.Create(Rn.RAX), state.Ctx.MkBV(0, 64)));
                 state.Update_Forward(updateState);
-            }            
+            }
             BitVecExpr address2 = Tools.Calc_Effective_Address("qword ptr[rax + 4 * rcx + 10]", state.HeadKey, tools, ctx);
 
             BitVecExpr value1 = state.Create(Rn.R8B);
@@ -278,13 +302,13 @@ namespace unit_tests_asm_z3
             }
             BitVecExpr value2 = state.Create_Mem(address2, nBytes);
 
-            if (logToDisplay)
+            if (LogToDisplay)
             {
                 Console.WriteLine("value1 = " + value1);
                 Console.WriteLine("value2 = " + value2);
                 Console.WriteLine(state);
             }
-            TestTools.AreEqual(Tv.ONE, state.EqualValues(value1, value2));
+            AsmTestTools.AreEqual(Tv.ONE, state.EqualValues(value1, value2));
         }
 
         [TestMethod]
@@ -296,9 +320,9 @@ namespace unit_tests_asm_z3
             stateConfig.RBX = true;
             stateConfig.RCX = true;
             stateConfig.RDX = true;
-            stateConfig.mem = true;
+            stateConfig.Mem = true;
 
-            State state = CreateState(stateConfig);
+            State state = this.CreateState(stateConfig);
             Context ctx = state.Ctx;
             Tools tools = state.Tools;
 
@@ -322,13 +346,13 @@ namespace unit_tests_asm_z3
             BitVecExpr value1 = state.Create_Mem(address1, 1);
             BitVecExpr value2 = state.Create_Mem(address2, 1);
 
-            if (logToDisplay)
+            if (LogToDisplay)
             {
                 Console.WriteLine("value1 = " + value1);
                 Console.WriteLine("value2 = " + value2);
                 Console.WriteLine(state);
             }
-            TestTools.AreEqual(Tv.ONE, state.EqualValues(value1, value2));
+            AsmTestTools.AreEqual(Tv.ONE, state.EqualValues(value1, value2));
         }
 
         [TestMethod]
@@ -340,9 +364,9 @@ namespace unit_tests_asm_z3
             stateConfig.RBX = true;
             stateConfig.RCX = true;
             stateConfig.RDX = true;
-            stateConfig.mem = true;
+            stateConfig.Mem = true;
 
-            State state = CreateState(stateConfig);
+            State state = this.CreateState(stateConfig);
             Context ctx = state.Ctx;
             Tools tools = state.Tools;
 
@@ -371,7 +395,7 @@ namespace unit_tests_asm_z3
             }
             BitVecExpr value2b = state.Create_Mem(address2, nBytes);
 
-            if (logToDisplay)
+            if (LogToDisplay)
             {
                 Console.WriteLine("value1a = " + value1a);
                 Console.WriteLine("value2a = " + value2a);
@@ -379,8 +403,8 @@ namespace unit_tests_asm_z3
                 Console.WriteLine("value2b = " + value2b);
                 Console.WriteLine(state);
             }
-            TestTools.AreEqual(Tv.ONE, state.EqualValues(value1a, value1b));
-            TestTools.AreEqual(Tv.ONE, state.EqualValues(value2a, value2b));
+            AsmTestTools.AreEqual(Tv.ONE, state.EqualValues(value1a, value1b));
+            AsmTestTools.AreEqual(Tv.ONE, state.EqualValues(value2a, value2b));
         }
 
         [TestMethod]
@@ -392,9 +416,9 @@ namespace unit_tests_asm_z3
             stateConfig.RBX = true;
             stateConfig.RCX = true;
             stateConfig.RDX = true;
-            stateConfig.mem = true;
+            stateConfig.Mem = true;
 
-            State state = CreateState(stateConfig);
+            State state = this.CreateState(stateConfig);
             Context ctx = state.Ctx;
             Tools tools = state.Tools;
 
@@ -408,7 +432,7 @@ namespace unit_tests_asm_z3
 
             BitVecExpr value1 = state.Create_Mem(address1, nBytes);
             BitVecExpr value2 = state.Create_Mem(address2, nBytes);
-            Assert.AreNotEqual(value1, value2); //value1 is not equal to value2 simply because rax and rbx are not related yet
+            Assert.AreNotEqual(value1, value2); // value1 is not equal to value2 simply because rax and rbx are not related yet
 
             state.Add(new BranchInfo(state.Ctx.MkEq(state.Create(Rn.RAX), state.Create(Rn.RBX)), true));
             // value1 and value2 are now (intuitively) equal; however, the retrieved memory values have not been updated yet to reflect this.
@@ -419,7 +443,7 @@ namespace unit_tests_asm_z3
                 updateState.Set(reg2, value2);
                 state.Update_Forward(updateState);
             }
-            if (logToDisplay)
+            if (LogToDisplay)
             {
                 Console.WriteLine("value1 = " + value1);
                 Console.WriteLine("value2 = " + value2);
@@ -427,7 +451,7 @@ namespace unit_tests_asm_z3
                 Console.WriteLine(reg2 + " = " + state.Create(reg2));
                 Console.WriteLine(state);
             }
-            TestTools.AreEqual(Tv.ONE, state.EqualValues(reg1, reg2));
+            AsmTestTools.AreEqual(Tv.ONE, state.EqualValues(reg1, reg2));
         }
     }
 }

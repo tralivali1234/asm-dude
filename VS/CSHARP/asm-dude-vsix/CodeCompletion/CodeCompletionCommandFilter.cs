@@ -1,17 +1,17 @@
 ﻿// The MIT License (MIT)
 //
-// Copyright (c) 2018 Henk-Jan Lebbink
-// 
+// Copyright (c) 2019 Henk-Jan Lebbink
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,54 +20,61 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using System;
-using System.Runtime.InteropServices;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.OLE.Interop;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Editor;
-
 namespace AsmDude
 {
+    using System;
+    using System.Runtime.InteropServices;
+    using Microsoft.VisualStudio;
+    using Microsoft.VisualStudio.Language.Intellisense;
+    using Microsoft.VisualStudio.OLE.Interop;
+    using Microsoft.VisualStudio.Shell;
+    using Microsoft.VisualStudio.Text;
+    using Microsoft.VisualStudio.Text.Editor;
+
     internal sealed class CodeCompletionCommandFilter : IOleCommandTarget
     {
-        private ICompletionSession _currentSession;
+        private ICompletionSession currentSession_;
 
         public CodeCompletionCommandFilter(IWpfTextView textView, ICompletionBroker broker)
         {
-            this._currentSession = null;
-            this.TextView = textView;
-            this.Broker = broker;
-            //Debug.WriteLine(string.Format("INFO: {0}:constructor", this.ToString()));
+            this.currentSession_ = null;
+            this.TextView = textView ?? throw new ArgumentNullException(nameof(textView));
+            this.Broker = broker ?? throw new ArgumentNullException(nameof(broker));
+            //Debug.WriteLine(string.Format(AsmDudeToolsStatic.CultureUI, "INFO: {0}:constructor", this.ToString()));
         }
 
         public IWpfTextView TextView { get; private set; }
+
         public ICompletionBroker Broker { get; private set; }
+
         public IOleCommandTarget NextCommandHandler { get; set; }
 
-        private char GetTypeChar(IntPtr pvaIn)
+        private static char GetTypeChar(IntPtr pvaIn)
         {
             return (char)(ushort)Marshal.GetObjectForNativeVariant(pvaIn);
         }
 
         public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             //if (VsShellUtilities.IsInAutomationFunction(m_provider.ServiceProvider)) {
-            //    return _nextCommandHandler.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+            //    return nextCommandHandler_.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
             //}
             if (false)
             {
-                return ExecMethod1(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+                return this.ExecMethod1(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
             }
             else
             {
-                return ExecMethod2(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+                return this.ExecMethod2(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
             }
         }
 
         private int ExecMethod1(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             //Debug.WriteLine(string.Format(CultureInfo.CurrentCulture, "INFO: {0}:Exec", this.ToString()));
             char typedChar = char.MinValue;
 
@@ -84,14 +91,13 @@ namespace AsmDude
                 char.IsWhiteSpace(typedChar) ||
                 char.IsPunctuation(typedChar))
             {
-
                 //check for a selection
-                if ((this._currentSession != null) && !this._currentSession.IsDismissed)
+                if ((this.currentSession_ != null) && !this.currentSession_.IsDismissed)
                 {
                     //if the selection is fully selected, commit the current session
-                    if (this._currentSession.SelectedCompletionSet.SelectionStatus.IsSelected)
+                    if (this.currentSession_.SelectedCompletionSet.SelectionStatus.IsSelected)
                     {
-                        this._currentSession.Commit();
+                        this.currentSession_.Commit();
 
                         //pass along the command so the char is added to the buffer, except if the command is an enter
                         if (nCmdID != (uint)VSConstants.VSStd2KCmdID.RETURN)
@@ -102,7 +108,7 @@ namespace AsmDude
                     }
                     else
                     { //if there is no selection, dismiss the session
-                        this._currentSession.Dismiss();
+                        this.currentSession_.Dismiss();
                     }
                 }
             }
@@ -111,38 +117,44 @@ namespace AsmDude
             bool handled = false;
             if (!typedChar.Equals(char.MinValue) && char.IsLetterOrDigit(typedChar))
             {
-                if (this._currentSession == null || this._currentSession.IsDismissed)
+                if (this.currentSession_ == null || this.currentSession_.IsDismissed)
                 { // If there is no active session, bring up completion
-                    if (StartSession())
+                    if (this.StartSession())
                     {
-                        if (this._currentSession != null)
+                        if (this.currentSession_ != null)
                         {
-                            this._currentSession.Filter();
+                            this.currentSession_.Filter();
                         }
                     }
                 }
                 else
-                {   //the completion session is already active, so just filter
-                    this._currentSession.Filter();
+                { //the completion session is already active, so just filter
+                    this.currentSession_.Filter();
                 }
                 handled = true;
             }
-            else if (nCmdID == (uint)VSConstants.VSStd2KCmdID.BACKSPACE   //redo the filter if there is a deletion
+            else if (nCmdID == (uint)VSConstants.VSStd2KCmdID.BACKSPACE //redo the filter if there is a deletion
                   || nCmdID == (uint)VSConstants.VSStd2KCmdID.DELETE)
             {
-                if (this._currentSession != null && !this._currentSession.IsDismissed)
+                if (this.currentSession_ != null && !this.currentSession_.IsDismissed)
                 {
-                    this._currentSession.Filter();
+                    this.currentSession_.Filter();
                 }
                 handled = true;
             }
-            if (handled) return VSConstants.S_OK;
+            if (handled)
+            {
+                return VSConstants.S_OK;
+            }
+
             return retVal;
         }
 
         private int ExecMethod2(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
         {
-            //AsmDudeToolsStatic.Output_INFO(string.Format("{0}:ExecMethod2", this.ToString()));
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            //AsmDudeToolsStatic.Output_INFO(string.Format(AsmDudeToolsStatic.CultureUI, "{0}:ExecMethod2", this.ToString()));
 
             bool handledChar = false;
             int hresult = VSConstants.S_OK;
@@ -155,33 +167,33 @@ namespace AsmDude
                 {
                     case VSConstants.VSStd2KCmdID.AUTOCOMPLETE:
                     case VSConstants.VSStd2KCmdID.COMPLETEWORD:
-                        handledChar = StartSession();
+                        handledChar = this.StartSession();
                         break;
                     case VSConstants.VSStd2KCmdID.RETURN:
-                        handledChar = Complete(true);
+                        handledChar = this.Complete(true);
                         break;
                     case VSConstants.VSStd2KCmdID.TAB:
-                        Complete(true);
+                        this.Complete(true);
                         handledChar = false;
                         break;
                     case VSConstants.VSStd2KCmdID.CANCEL:
-                        handledChar = Cancel();
+                        handledChar = this.Cancel();
                         break;
                     case VSConstants.VSStd2KCmdID.TYPECHAR:
                         typedChar = GetTypeChar(pvaIn);
                         if (char.IsWhiteSpace(typedChar))
                         {
-                            Complete(true);
+                            this.Complete(true);
                             handledChar = false;
                         }
                         else if (AsmTools.AsmSourceTools.IsSeparatorChar(typedChar))
                         {
-                            Complete(false);
+                            this.Complete(false);
                             handledChar = false;
                         }
                         else if (AsmTools.AsmSourceTools.IsRemarkChar(typedChar))
                         {
-                            Complete(true);
+                            this.Complete(true);
                             handledChar = false;
                         }
                         break;
@@ -197,19 +209,19 @@ namespace AsmDude
                 if (!typedChar.Equals(char.MinValue) && char.IsLetterOrDigit(typedChar))
                 {
                     //if (!typedChar.Equals(char.MinValue)) {
-                    if ((this._currentSession == null) || this._currentSession.IsDismissed)
+                    if ((this.currentSession_ == null) || this.currentSession_.IsDismissed)
                     { // If there is no active session, bring up completion
-                        StartSession();
+                        this.StartSession();
                     }
-                    Filter();
+                    this.Filter();
                     hresult = VSConstants.S_OK;
                 }
-                else if (nCmdID == (uint)VSConstants.VSStd2KCmdID.BACKSPACE   //redo the filter if there is a deletion
+                else if (nCmdID == (uint)VSConstants.VSStd2KCmdID.BACKSPACE //redo the filter if there is a deletion
                       || nCmdID == (uint)VSConstants.VSStd2KCmdID.DELETE)
                 {
-                    if ((this._currentSession != null) && !this._currentSession.IsDismissed)
+                    if ((this.currentSession_ != null) && !this.currentSession_.IsDismissed)
                     {
-                        Filter();
+                        this.Filter();
                     }
                     hresult = VSConstants.S_OK;
                 }
@@ -226,7 +238,7 @@ namespace AsmDude
                         case VSConstants.VSStd2KCmdID.TYPECHAR:
                         case VSConstants.VSStd2KCmdID.BACKSPACE:
                         case VSConstants.VSStd2KCmdID.DELETE:
-                            Filter();
+                            this.Filter();
                             break;
                     }
                 }
@@ -238,7 +250,7 @@ namespace AsmDude
 
         private bool StartSession()
         {
-            if (this._currentSession != null)
+            if (this.currentSession_ != null)
             {
                 return false;
             }
@@ -247,17 +259,17 @@ namespace AsmDude
 
             if (this.Broker.IsCompletionActive(this.TextView))
             {
-                //AsmDudeToolsStatic.Output_INFO(string.Format("{0}:StartSession. Recycling an existing auto-complete session", this.ToString()));
-                this._currentSession = this.Broker.GetSessions(this.TextView)[0];
+                //AsmDudeToolsStatic.Output_INFO(string.Format(AsmDudeToolsStatic.CultureUI, "{0}:StartSession. Recycling an existing auto-complete session", this.ToString()));
+                this.currentSession_ = this.Broker.GetSessions(this.TextView)[0];
             }
             else
             {
-                //AsmDudeToolsStatic.Output_INFO(string.Format("{0}:StartSession. Creating a new auto-complete session", this.ToString()));
-                this._currentSession = this.Broker.CreateCompletionSession(this.TextView, snapshot.CreateTrackingPoint(caret, PointTrackingMode.Positive), true);
+                //AsmDudeToolsStatic.Output_INFO(string.Format(AsmDudeToolsStatic.CultureUI, "{0}:StartSession. Creating a new auto-complete session", this.ToString()));
+                this.currentSession_ = this.Broker.CreateCompletionSession(this.TextView, snapshot.CreateTrackingPoint(caret, PointTrackingMode.Positive), true);
             }
-            this._currentSession.Dismissed += (sender, args) => this._currentSession = null;
-            this._currentSession.Start();
-            //AsmDudeToolsStatic.Output_INFO(string.Format("{0}:StartSession", this.ToString()));
+            this.currentSession_.Dismissed += (sender, args) => this.currentSession_ = null;
+            this.currentSession_.Start();
+            //AsmDudeToolsStatic.Output_INFO(string.Format(AsmDudeToolsStatic.CultureUI, "{0}:StartSession", this.ToString()));
             return true;
         }
 
@@ -268,29 +280,29 @@ namespace AsmDude
         /// <returns></returns>
         private bool Complete(bool force)
         {
-            if (this._currentSession == null)
+            if (this.currentSession_ == null)
             {
                 return false;
             }
-            if (!this._currentSession.SelectedCompletionSet.SelectionStatus.IsSelected && !force)
+            if (!this.currentSession_.SelectedCompletionSet.SelectionStatus.IsSelected && !force)
             {
-                this._currentSession.Dismiss();
+                this.currentSession_.Dismiss();
                 return false;
             }
             else
             {
-                this._currentSession.Commit();
+                this.currentSession_.Commit();
                 return true;
             }
         }
 
         private bool Cancel()
         {
-            if (this._currentSession == null)
+            if (this.currentSession_ == null)
             {
                 return false;
             }
-            this._currentSession.Dismiss();
+            this.currentSession_.Dismiss();
             return true;
         }
 
@@ -299,24 +311,26 @@ namespace AsmDude
         /// </summary>
         private void Filter()
         {
-            if (this._currentSession == null)
+            if (this.currentSession_ == null)
             {
                 return;
             }
             // this._currentSession.SelectedCompletionSet.SelectBestMatch();
             //this._currentSession.SelectedCompletionSet.Recalculate();
-            this._currentSession.Filter();
+            this.currentSession_.Filter();
         }
 
         public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText)
         {
-            //AsmDudeToolsStatic.Output_INFO(string.Format("{0}:QueryStatus", this.ToString()));
+            ThreadHelper.ThrowIfNotOnUIThread();
+            //AsmDudeToolsStatic.Output_INFO(string.Format(AsmDudeToolsStatic.CultureUI, "{0}:QueryStatus", this.ToString()));
             if (pguidCmdGroup == VSConstants.VSStd2K)
             {
                 switch ((VSConstants.VSStd2KCmdID)prgCmds[0].cmdID)
                 {
                     case VSConstants.VSStd2KCmdID.AUTOCOMPLETE:
                     case VSConstants.VSStd2KCmdID.COMPLETEWORD:
+                        //AsmDudeToolsStatic.Output_INFO(string.Format(AsmDudeToolsStatic.CultureUI, "{0}:QueryStatus", this.ToString()));
                         //Debug.WriteLine(string.Format(CultureInfo.CurrentCulture, "INFO: {0}:QueryStatus", this.ToString()));
                         prgCmds[0].cmdf = (uint)OLECMDF.OLECMDF_ENABLED | (uint)OLECMDF.OLECMDF_SUPPORTED;
                         return VSConstants.S_OK;

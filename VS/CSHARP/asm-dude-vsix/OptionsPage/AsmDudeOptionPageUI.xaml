@@ -6,12 +6,45 @@
     <ScrollViewer>
         <StackPanel>
             <Label x:Name="version_UI" Content="AsmDude version" />
-            <Grid>
-                <Label Content="Flavor:" HorizontalAlignment="Left"/>
-                <RadioButton x:Name="usedAssemblerMasm_UI" GroupName="usedAssembler_UI" ToolTipService.ShowOnDisabled="True" ToolTip="Configure AsmDude for Intel syntax MASM" Content="Intel Masm" Margin="140,5,0,0" HorizontalAlignment="Left" Width="Auto" />
-                <RadioButton x:Name="usedAssemblerNasm_UI" GroupName="usedAssembler_UI" ToolTipService.ShowOnDisabled="True" ToolTip="Configure AsmDude for Intel syntax NASM" Content="Intel Nasm" Margin="240,5,0,0" HorizontalAlignment="Left" Width="Auto" />
-                <RadioButton x:Name="usedAssemblerAtt_UI" GroupName="usedAssembler_UI" ToolTipService.ShowOnDisabled="True" ToolTip="Configure AsmDude for AT&amp;T syntax NASM" Content="AT&amp;T Nasm" Margin="340,5,0,0" HorizontalAlignment="Left" Width="Auto" />
-            </Grid>
+            <GroupBox Header="Global" >
+                <Grid Margin="0,2,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="130"/>
+                        <ColumnDefinition Width="90"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="26" />
+                    </Grid.RowDefinitions>
+                    <Label Content="Maximal file size:" Grid.Column="0" Grid.Row="0" ToolTip="Files that contain more lines of code will switch off: Code Folding, Keyword Highlighting, Brace Matching and Label Analysis"/>
+                    <xctk:IntegerUpDown x:Name="Global_MaxFileLines_UI" Grid.Column="1" Grid.Row="0" DefaultValue="50000" Height="26" VerticalAlignment="Center" VerticalContentAlignment="Center" Width="Auto"/>
+                </Grid>
+            </GroupBox>
+            <GroupBox Header="Assembly Flavour" >
+                <Grid Margin="0,2,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="130"/>
+                        <ColumnDefinition Width="90"/>
+                        <ColumnDefinition Width="90"/>
+                        <ColumnDefinition Width="90"/>
+                        <ColumnDefinition Width="90"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="26" />
+                        <RowDefinition Height="26" />
+                    </Grid.RowDefinitions>
+
+                    <Label Grid.Column="0" Grid.Row="0" Content="Main Window:" HorizontalAlignment="Left"/>
+                    <RadioButton Grid.Column="1" Grid.Row="0" x:Name="usedAssemblerAuto_UI" GroupName="usedAssembler_UI" ToolTipService.ShowOnDisabled="True" ToolTip="Auto-detect assembly syntax for the main window" Content="Auto Detect" VerticalAlignment="Center" Width="Auto" />
+                    <RadioButton Grid.Column="2" Grid.Row="0" x:Name="usedAssemblerMasm_UI" GroupName="usedAssembler_UI" ToolTipService.ShowOnDisabled="True" ToolTip="Configure AsmDude for Intel syntax MASM" Content="Intel Masm" VerticalAlignment="Center" Width="Auto" />
+                    <RadioButton Grid.Column="3" Grid.Row="0" x:Name="usedAssemblerNasm_UI" GroupName="usedAssembler_UI" ToolTipService.ShowOnDisabled="True" ToolTip="Configure AsmDude for Intel syntax NASM" Content="Intel Nasm" VerticalAlignment="Center" Width="Auto" />
+                    <RadioButton Grid.Column="4" Grid.Row="0" x:Name="usedAssemblerAtt_UI" GroupName="usedAssembler_UI" ToolTipService.ShowOnDisabled="True" ToolTip="Configure AsmDude for AT&amp;T syntax NASM" Content="AT&amp;T Nasm" VerticalAlignment="Center" Width="Auto" />
+
+                    <Label Grid.Column="0" Grid.Row="1" Content="Disassembly Window:" HorizontalAlignment="Left"/>
+                    <RadioButton Grid.Column="1" Grid.Row="1" x:Name="AssemblerDisassemblyAuto_UI" GroupName="usedAssemblerDissembler_UI" ToolTipService.ShowOnDisabled="True" ToolTip="Auto-detect assembly syntax for the disassembly window" Content="Auto Detect" VerticalAlignment="Center" Width="Auto" />
+                    <RadioButton Grid.Column="2" Grid.Row="1" x:Name="AssemblerDisassemblyMasm_UI" GroupName="usedAssemblerDissembler_UI" ToolTipService.ShowOnDisabled="True" ToolTip="Configure Visual Studio Disassembly window for Intel syntax MASM" Content="Intel Masm" VerticalAlignment="Center" Width="Auto" />
+                    <RadioButton Grid.Column="4" Grid.Row="1" x:Name="AssemblerDisassemblyAtt_UI" GroupName="usedAssemblerDissembler_UI" ToolTipService.ShowOnDisabled="True" ToolTip="Configure Visual Studio Disassembly window for AT&amp;T syntax NASM" Content="AT&amp;T Nasm" VerticalAlignment="Center" Width="Auto" />
+                </Grid>
+            </GroupBox>
             <GroupBox Header="Syntax Highlighting" >
                 <Grid Margin="0,2,0,0">
                     <Grid.ColumnDefinitions>
@@ -116,15 +149,15 @@
                     </Grid.RowDefinitions>
 
                     <CheckBox x:Name="CodeFolding_On_UI" Grid.Column="0" Grid.Row="0" ToolTipService.ShowOnDisabled="True" ToolTip="Code folding enabled" Content="Enable code folding" VerticalAlignment="Center" />
-                    <CheckBox x:Name="CodeFolding_IsDefaultCollaped_UI" Grid.Column="1" Grid.Row="0" ToolTipService.ShowOnDisabled="True" ToolTip="Whether folding regions are collapsed by default" Content="Default collapsed" VerticalAlignment="Center" />
+                    <CheckBox x:Name="CodeFolding_IsDefaultCollapsed_UI" Grid.Column="1" Grid.Row="0" ToolTipService.ShowOnDisabled="True" ToolTip="Whether folding regions are collapsed by default" Content="Default collapsed" VerticalAlignment="Center" />
 
                     <Label Content="Start tag:" Grid.Column="0" Grid.Row="1" VerticalAlignment="Center" />
                     <TextBox x:Name="CodeFolding_BeginTag_UI" Grid.Column="1" Grid.Row="1" ToolTipService.ShowOnDisabled="True" ToolTip="The characters that start the outlining region. E.g. #region." Height="26" VerticalAlignment="Center" VerticalContentAlignment="Center" />
 
                     <Label Content="End tag:" Grid.Column="0" Grid.Row="2" />
                     <TextBox x:Name="CodeFolding_EndTag_UI" Grid.Column="1" Grid.Row="2" ToolTipService.ShowOnDisabled="True" ToolTip="The characters that end the outlining region. E.g. #endregion." Height="26" VerticalAlignment="Center" VerticalContentAlignment="Center" />
-
-                    <TextBlock TextWrapping="WrapWithOverflow" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="3" Text="Note: place folding tags in a remark in order not to offend your assembler. For example, use: ;#region" VerticalAlignment="Center" />
+ 
+                    <TextBlock TextWrapping="WrapWithOverflow" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="4" Text="Note: place folding tags in a remark in order not to offend your assembler. For example, use: ;#region" VerticalAlignment="Center" />
                 </Grid>
             </GroupBox>
             <GroupBox Header="Keyword Highlighting" >
@@ -147,16 +180,28 @@
             </GroupBox>
             <GroupBox Header="Latency and Throughput Information" >
                 <Grid Margin="0,2,0,0">
-                    <StackPanel>
-                        <!--<CheckBox x:Name="PerformanceInfo_SandyBridge_UI" ToolTipService.ShowOnDisabled="True" ToolTip="Show performance information for Sandy Bridge in instruction QuickInfo tooltips" Content="Sandy Bridge (Intel 2nd gen Core)" Margin="0,4,0,2" HorizontalAlignment="Left" Width="Auto" />
-                        -->
-                        <CheckBox x:Name="PerformanceInfo_IvyBridge_UI" ToolTipService.ShowOnDisabled="True" ToolTip="Show performance information for Ivy Bridge in instruction QuickInfo tooltips" Content="Ivy Bridge (Intel 3nd gen Core)" Margin="0,2,0,2" HorizontalAlignment="Left" Width="Auto" />
-                        <CheckBox x:Name="PerformanceInfo_Haswell_UI" ToolTipService.ShowOnDisabled="True" ToolTip="Show performance information for Haswell in instruction QuickInfo tooltips" Content="Haswell (Intel 4nd gen Core)" Margin="0,2,0,2" HorizontalAlignment="Left" Width="Auto" />
-                        <CheckBox x:Name="PerformanceInfo_Broadwell_UI" ToolTipService.ShowOnDisabled="True" ToolTip="Show performance information for Broadwell in instruction QuickInfo tooltips" Content="Broadwell (Intel 5nd gen Core)" Margin="0,2,0,2" HorizontalAlignment="Left" Width="Auto" />
-                        <CheckBox x:Name="PerformanceInfo_Skylake_UI" ToolTipService.ShowOnDisabled="True" ToolTip="Show performance information for Skylake in instruction QuickInfo tooltips" Content="Skylake (Intel 6nd gen Core)" Margin="0,2,0,4" HorizontalAlignment="Left" Width="Auto" />
-                        <!--<CheckBox x:Name="PerformanceInfo_KnightsLanding_UI" ToolTipService.ShowOnDisabled="True" ToolTip="Show performance information for Knights Landing in instruction QuickInfo tooltips" Content="Knights Landing (Intel Xeon Phi)" Margin="0,2,0,4" />
-                        -->
-                    </StackPanel>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="180"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="26" />
+                        <RowDefinition Height="26" />
+                        <RowDefinition Height="26" />
+                        <RowDefinition Height="26" />
+                        <RowDefinition Height="26" />
+                        <RowDefinition Height="26" />
+                    </Grid.RowDefinitions>
+
+                    <CheckBox x:Name="PerformanceInfo_On_UI" Grid.Column="0" Grid.Row="0" ToolTipService.ShowOnDisabled="True" ToolTip="Latency and Throughput information enabled" Content="Enable" VerticalAlignment="Center" />
+                    <CheckBox x:Name="PerformanceInfo_IsDefaultCollapsed_UI" Grid.Column="1" Grid.Row="0" ToolTipService.ShowOnDisabled="True" ToolTip="Whether performance information is collapsed by default" Content="Default collapsed" VerticalAlignment="Center" />
+
+                    <!--<CheckBox x:Name="PerformanceInfo_SandyBridge_UI" Grid.Row="0" ToolTipService.ShowOnDisabled="True" ToolTip="Show performance information for Sandy Bridge in instruction QuickInfo tooltips" Content="Sandy Bridge (Intel 2nd gen Core)" VerticalAlignment="Center" Width="Auto" /> -->
+                    <CheckBox x:Name="PerformanceInfo_IvyBridge_UI" Grid.Row="1" ToolTipService.ShowOnDisabled="True" ToolTip="Show performance information for Ivy Bridge in instruction QuickInfo tooltips" Content="Ivy Bridge (Intel 3nd gen Core)" VerticalAlignment="Center" Width="Auto" />
+                    <CheckBox x:Name="PerformanceInfo_Haswell_UI"   Grid.Row="2" ToolTipService.ShowOnDisabled="True" ToolTip="Show performance information for Haswell in instruction QuickInfo tooltips" Content="Haswell (Intel 4nd gen Core)" VerticalAlignment="Center" Width="Auto" />
+                    <CheckBox x:Name="PerformanceInfo_Broadwell_UI" Grid.Row="3" ToolTipService.ShowOnDisabled="True" ToolTip="Show performance information for Broadwell in instruction QuickInfo tooltips" Content="Broadwell (Intel 5nd gen Core)" VerticalAlignment="Center" Width="Auto" />
+                    <CheckBox x:Name="PerformanceInfo_Skylake_UI"   Grid.Row="4" ToolTipService.ShowOnDisabled="True" ToolTip="Show performance information for Skylake in instruction QuickInfo tooltips" Content="Skylake (Intel 6nd gen Core)" VerticalAlignment="Center"  Width="Auto" />
+                    <CheckBox x:Name="PerformanceInfo_SkylakeX_UI"  Grid.Row="5" ToolTipService.ShowOnDisabled="True" ToolTip="Show performance information for Skylake-X in instruction QuickInfo tooltips" Content="Skylake-X (Intel 7nd gen Core)" VerticalAlignment="Center" Width="Auto" />
                 </Grid>
             </GroupBox>
             <GroupBox Header="Intellisense" >
@@ -280,39 +325,41 @@
                 <StackPanel>
                     <GroupBox Header="Processors">
                         <StackPanel>
-                            <CheckBox x:Name="UseArch_8086_UI" Content="8086" Width="Auto" />
-                            <CheckBox x:Name="UseArch_186_UI" Content="186" Width="Auto" />
-                            <CheckBox x:Name="UseArch_286_UI" Content="286" Width="Auto" />
-                            <CheckBox x:Name="UseArch_386_UI" Content="386" Width="Auto" />
-                            <CheckBox x:Name="UseArch_486_UI" Content="486" Width="Auto" />
-                            <CheckBox x:Name="UseArch_PENT_UI" Content="PENT" Width="Auto" />
-                            <CheckBox x:Name="UseArch_P6_UI" Content="P6" Width="Auto" />
+                            <CheckBox x:Name="ARCH_8086_UI" Content="8086" Width="Auto" />
+                            <CheckBox x:Name="ARCH_186_UI" Content="186" Width="Auto" />
+                            <CheckBox x:Name="ARCH_286_UI" Content="286" Width="Auto" />
+                            <CheckBox x:Name="ARCH_386_UI" Content="386" Width="Auto" />
+                            <CheckBox x:Name="ARCH_486_UI" Content="486" Width="Auto" />
+                            <CheckBox x:Name="ARCH_PENT_UI" Content="PENT" Width="Auto" />
+                            <CheckBox x:Name="ARCH_P6_UI" Content="P6" Width="Auto" />
                         </StackPanel>
                     </GroupBox>
                     <GroupBox Header="SIMD" >
                         <StackPanel>
                             <GroupBox Header="Streaming SIMD Extensions">
                                 <StackPanel>
-                                    <CheckBox x:Name="UseArch_MMX_UI" Content="MMX" Width="Auto" />
-                                    <CheckBox x:Name="UseArch_SSE_UI" Content="SSE" Width="Auto" />
-                                    <CheckBox x:Name="UseArch_SSE2_UI" Content="SSE2" Width="Auto" />
-                                    <CheckBox x:Name="UseArch_SSE3_UI" Content="SSE3" Width="Auto" />
-                                    <CheckBox x:Name="UseArch_SSSE3_UI" Content="SSSE3" Width="Auto" />
-                                    <CheckBox x:Name="UseArch_SSE41_UI" Content="SSE4.1" Width="Auto" />
-                                    <CheckBox x:Name="UseArch_SSE42_UI" Content="SSE4.2" Width="Auto" />
-                                    <CheckBox x:Name="UseArch_SSE4A_UI" Content="SSE4A - AMD" Width="Auto" />
-                                    <CheckBox x:Name="UseArch_SSE5_UI" Content="SSE5 - AMD" Width="Auto" />
+                                    <CheckBox x:Name="ARCH_MMX_UI" Content="MMX" Width="Auto" />
+                                    <CheckBox x:Name="ARCH_SSE_UI" Content="SSE" Width="Auto" />
+                                    <CheckBox x:Name="ARCH_SSE2_UI" Content="SSE2" Width="Auto" />
+                                    <CheckBox x:Name="ARCH_SSE3_UI" Content="SSE3" Width="Auto" />
+                                    <CheckBox x:Name="ARCH_SSSE3_UI" Content="SSSE3" Width="Auto" />
+                                    <CheckBox x:Name="ARCH_SSE4_1_UI" Content="SSE4.1" Width="Auto" />
+                                    <CheckBox x:Name="ARCH_SSE4_2_UI" Content="SSE4.2" Width="Auto" />
+                                    <CheckBox x:Name="ARCH_SSE4A_UI" Content="SSE4A - AMD" Width="Auto" />
+                                    <CheckBox x:Name="ARCH_SSE5_UI" Content="SSE5 - AMD" Width="Auto" />
                                 </StackPanel>
                             </GroupBox>
                             <GroupBox Header="Advanced Vector Extensions">
                                 <StackPanel>
-                                    <CheckBox x:Name="UseArch_AVX_UI" Content="AVX" HorizontalAlignment="Left" Width="Auto" />
-                                    <CheckBox x:Name="UseArch_AVX2_UI" Content="AVX2" HorizontalAlignment="Left" Width="Auto" />
+                                    <CheckBox x:Name="ARCH_AVX_UI" Content="AVX" HorizontalAlignment="Left" Width="Auto" />
+                                    <CheckBox x:Name="ARCH_AVX2_UI" Content="AVX2" HorizontalAlignment="Left" Width="Auto" />
 
                                     <GroupBox Header="AVX512">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="150"/>
+                                                <ColumnDefinition Width="60"/>
+                                                <ColumnDefinition Width="60"/>
                                                 <ColumnDefinition Width="60"/>
                                                 <ColumnDefinition Width="60"/>
                                                 <ColumnDefinition Width="60"/>
@@ -339,6 +386,9 @@
                                                 <RowDefinition Height="*" />
                                                 <RowDefinition Height="*" />
                                                 <RowDefinition Height="*" />
+                                                <RowDefinition Height="*" />
+                                                <RowDefinition Height="*" />
+                                                <RowDefinition Height="*" />
                                             </Grid.RowDefinitions>
 
                                             <TextBlock Text="SkyLake" Grid.Column="1" Grid.Row="0" TextWrapping="WrapWithOverflow" IsEnabled="False" HorizontalAlignment="Center" />
@@ -346,79 +396,91 @@
                                             <TextBlock Text="Cannon-Lake" Grid.Column="3" Grid.Row="0" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center"/>
                                             <TextBlock Text="Knights Mill" Grid.Column="4" Grid.Row="0" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center"/>
                                             <TextBlock Text="Ice Lake" Grid.Column="5" Grid.Row="0" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="Tiger Lake" Grid.Column="6" Grid.Row="0" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="Sapphire Rapids" Grid.Column="7" Grid.Row="0" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center"/>
 
-                                            <CheckBox x:Name="UseArch_AVX512_F_UI" Grid.Column="0" Grid.Row="1" Content="AVX512-F" VerticalAlignment="Center" Width="Auto" />
+                                            <CheckBox x:Name="ARCH_AVX512_F_UI" Grid.Column="0" Grid.Row="1" Content="AVX512-F" VerticalAlignment="Center" Width="Auto" />
                                             <TextBlock Text="X" Grid.Column="1" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             <TextBlock Text="X" Grid.Column="2" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             <TextBlock Text="X" Grid.Column="3" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             <TextBlock Text="X" Grid.Column="4" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             <TextBlock Text="X" Grid.Column="5" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-                                            <CheckBox x:Name="UseArch_AVX512_CD_UI" Grid.Column="0" Grid.Row="2" Content="AVX512-CD" VerticalAlignment="Center" Width="Auto" />
+                                            <CheckBox x:Name="ARCH_AVX512_CD_UI" Grid.Column="0" Grid.Row="2" Content="AVX512-CD" VerticalAlignment="Center" Width="Auto" />
                                             <TextBlock Text="X" Grid.Column="1" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             <TextBlock Text="X" Grid.Column="2" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             <TextBlock Text="X" Grid.Column="3" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             <TextBlock Text="X" Grid.Column="4" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             <TextBlock Text="X" Grid.Column="5" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-                                            <CheckBox x:Name="UseArch_AVX512_ER_UI" Grid.Column="0" Grid.Row="3" Content="AVX512-ER" VerticalAlignment="Center" Width="Auto" />
+                                            <CheckBox x:Name="ARCH_AVX512_ER_UI" Grid.Column="0" Grid.Row="3" Content="AVX512-ER" VerticalAlignment="Center" Width="Auto" />
                                             <TextBlock Text="X" Grid.Column="2" Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             <TextBlock Text="X" Grid.Column="4" Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-                                            <CheckBox x:Name="UseArch_AVX512_PF_UI" Grid.Column="0" Grid.Row="4" Content="AVX512-PF" VerticalAlignment="Center" Width="Auto" />
+                                            <CheckBox x:Name="ARCH_AVX512_PF_UI" Grid.Column="0" Grid.Row="4" Content="AVX512-PF" VerticalAlignment="Center" Width="Auto" />
                                             <TextBlock Text="X" Grid.Column="2" Grid.Row="4" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             <TextBlock Text="X" Grid.Column="4" Grid.Row="4" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-                                            <CheckBox x:Name="UseArch_AVX512_BW_UI" Grid.Column="0" Grid.Row="5" Content="AVX512-BW" VerticalAlignment="Center" Width="Auto" />
+                                            <CheckBox x:Name="ARCH_AVX512_BW_UI" Grid.Column="0" Grid.Row="5" Content="AVX512-BW" VerticalAlignment="Center" Width="Auto" />
                                             <TextBlock Text="X" Grid.Column="1" Grid.Row="5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             <TextBlock Text="X" Grid.Column="3" Grid.Row="5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             <TextBlock Text="X" Grid.Column="5" Grid.Row="5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-                                            <CheckBox x:Name="UseArch_AVX512_DQ_UI" Grid.Column="0" Grid.Row="6" Content="AVX512-DQ" VerticalAlignment="Center" Width="Auto" />
+                                            <CheckBox x:Name="ARCH_AVX512_DQ_UI" Grid.Column="0" Grid.Row="6" Content="AVX512-DQ" VerticalAlignment="Center" Width="Auto" />
                                             <TextBlock Text="X" Grid.Column="1" Grid.Row="6" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             <TextBlock Text="X" Grid.Column="3" Grid.Row="6" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             <TextBlock Text="X" Grid.Column="5" Grid.Row="6" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-                                            <CheckBox x:Name="UseArch_AVX512_VL_UI" Grid.Column="0" Grid.Row="7" Content="AVX512-VL" VerticalAlignment="Center" Width="Auto" />
+                                            <CheckBox x:Name="ARCH_AVX512_VL_UI" Grid.Column="0" Grid.Row="7" Content="AVX512-VL" VerticalAlignment="Center" Width="Auto" />
                                             <TextBlock Text="X" Grid.Column="1" Grid.Row="7" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             <TextBlock Text="X" Grid.Column="3" Grid.Row="7" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             <TextBlock Text="X" Grid.Column="5" Grid.Row="7" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-                                            <CheckBox x:Name="UseArch_AVX512_IFMA_UI" Grid.Column="0" Grid.Row="8" Content="AVX512-IFMA" VerticalAlignment="Center" Width="Auto" />
+                                            <CheckBox x:Name="ARCH_AVX512_IFMA_UI" Grid.Column="0" Grid.Row="8" Content="AVX512-IFMA" VerticalAlignment="Center" Width="Auto" />
                                             <TextBlock Text="X" Grid.Column="3" Grid.Row="8" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             <TextBlock Text="X" Grid.Column="5" Grid.Row="8" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-                                            <CheckBox x:Name="UseArch_AVX512_VBMI_UI" Grid.Column="0" Grid.Row="9" Content="AVX512-VBMI" VerticalAlignment="Center" Width="Auto" />
+                                            <CheckBox x:Name="ARCH_AVX512_VBMI_UI" Grid.Column="0" Grid.Row="9" Content="AVX512-VBMI" VerticalAlignment="Center" Width="Auto" />
                                             <TextBlock Text="X" Grid.Column="3" Grid.Row="9" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             <TextBlock Text="X" Grid.Column="5" Grid.Row="9" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-                                            <CheckBox x:Name="UseArch_AVX512_VPOPCNTDQ_UI" Grid.Column="0" Grid.Row="10" Content="AVX512-VPOPCNTDQ" VerticalAlignment="Center" Width="Auto" />
+                                            <CheckBox x:Name="ARCH_AVX512_VPOPCNTDQ_UI" Grid.Column="0" Grid.Row="10" Content="AVX512-VPOPCNTDQ" VerticalAlignment="Center" Width="Auto" />
                                             <TextBlock Text="X" Grid.Column="4" Grid.Row="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             <TextBlock Text="X" Grid.Column="5" Grid.Row="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-                                            <CheckBox x:Name="UseArch_AVX512_4VNNIW_UI" Grid.Column="0" Grid.Row="11" Content="AVX512-4VNNIW" VerticalAlignment="Center" Width="Auto" />
+                                            <CheckBox x:Name="ARCH_AVX512_4VNNIW_UI" Grid.Column="0" Grid.Row="11" Content="AVX512-4VNNIW" VerticalAlignment="Center" Width="Auto" />
                                             <TextBlock Text="X" Grid.Column="4" Grid.Row="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-                                            <CheckBox x:Name="UseArch_AVX512_4FMAPS_UI" Grid.Column="0" Grid.Row="12" Content="AVX512-4FMAPS" VerticalAlignment="Center" Width="Auto" />
+                                            <CheckBox x:Name="ARCH_AVX512_4FMAPS_UI" Grid.Column="0" Grid.Row="12" Content="AVX512-4FMAPS" VerticalAlignment="Center" Width="Auto" />
                                             <TextBlock Text="X" Grid.Column="4" Grid.Row="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-                                            <CheckBox x:Name="UseArch_AVX512_VBMI2_UI" Grid.Column="0" Grid.Row="13" Content="AVX512-VBMI2" VerticalAlignment="Center" Width="Auto" />
+                                            <CheckBox x:Name="ARCH_AVX512_VBMI2_UI" Grid.Column="0" Grid.Row="13" Content="AVX512-VBMI2" VerticalAlignment="Center" Width="Auto" />
                                             <TextBlock Text="X" Grid.Column="5" Grid.Row="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-                                            <CheckBox x:Name="UseArch_AVX512_VNNI_UI" Grid.Column="0" Grid.Row="14" Content="AVX512-VNNI" VerticalAlignment="Center" Width="Auto" />
+                                            <CheckBox x:Name="ARCH_AVX512_VNNI_UI" Grid.Column="0" Grid.Row="14" Content="AVX512-VNNI" VerticalAlignment="Center" Width="Auto" />
                                             <TextBlock Text="X" Grid.Column="5" Grid.Row="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-                                            <CheckBox x:Name="UseArch_AVX512_BITALG_UI" Grid.Column="0" Grid.Row="15" Content="AVX512-BITALG" VerticalAlignment="Center" Width="Auto" />
+                                            <CheckBox x:Name="ARCH_AVX512_BITALG_UI" Grid.Column="0" Grid.Row="15" Content="AVX512-BITALG" VerticalAlignment="Center" Width="Auto" />
                                             <TextBlock Text="X" Grid.Column="5" Grid.Row="15" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-                                            <CheckBox x:Name="UseArch_AVX512_GFNI_UI" Grid.Column="0" Grid.Row="16" Content="AVX512-GFNI" VerticalAlignment="Center" Width="Auto" />
+                                            <CheckBox x:Name="ARCH_AVX512_GFNI_UI" Grid.Column="0" Grid.Row="16" Content="AVX512-GFNI" VerticalAlignment="Center" Width="Auto" />
                                             <TextBlock Text="X" Grid.Column="5" Grid.Row="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-                                            <CheckBox x:Name="UseArch_AVX512_VAES_UI" Grid.Column="0" Grid.Row="17" Content="AVX512-VAES" VerticalAlignment="Center" Width="Auto" />
+                                            <CheckBox x:Name="ARCH_AVX512_VAES_UI" Grid.Column="0" Grid.Row="17" Content="AVX512-VAES" VerticalAlignment="Center" Width="Auto" />
                                             <TextBlock Text="X" Grid.Column="5" Grid.Row="17" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-                                            <CheckBox x:Name="UseArch_AVX512_VPCLMULQDQ_UI"  Grid.Column="0" Grid.Row="18" Content="AVX512-VPCLMULQDQ" VerticalAlignment="Center" Width="Auto" />
+                                            <CheckBox x:Name="ARCH_AVX512_VPCLMULQDQ_UI"  Grid.Column="0" Grid.Row="18" Content="AVX512-VPCLMULQDQ" VerticalAlignment="Center" Width="Auto" />
                                             <TextBlock Text="X" Grid.Column="5" Grid.Row="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                                            <CheckBox x:Name="ARCH_AVX512_BF16_UI"  Grid.Column="0" Grid.Row="19" Content="AVX512-BF16" VerticalAlignment="Center" Width="Auto" />
+                                            <TextBlock Text="X" Grid.Column="6" Grid.Row="19" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                                            <CheckBox x:Name="ARCH_AVX512_VP2INTERSECT_UI"  Grid.Column="0" Grid.Row="20" Content="AVX512-VP2INTERSECT" VerticalAlignment="Center" Width="Auto" />
+                                            <TextBlock Text="X" Grid.Column="6" Grid.Row="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                                            <CheckBox x:Name="ARCH_ENQCMD_UI"  Grid.Column="0" Grid.Row="21" Content="AVX512-ENQCMD" VerticalAlignment="Center" Width="Auto" />
+                                            <TextBlock Text="X" Grid.Column="7" Grid.Row="21" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
 
                                         </Grid>
                                     </GroupBox>
@@ -428,43 +490,49 @@
                     </GroupBox>
                     <GroupBox Header="Intel Extensions" >
                         <StackPanel>
-                            <CheckBox x:Name="UseArch_ADX_UI" Content="ADX - Multi-Precision Add-Carry Instruction Extensions" Width="Auto" />
-                            <CheckBox x:Name="UseArch_AES_UI" Content="AES - Advanced Encryption Standard" Width="Auto" />
-                            <CheckBox x:Name="UseArch_BMI1_UI" Content="BMI1 - Bit Manipulation Instructions Sets 1" Width="Auto" />
-                            <CheckBox x:Name="UseArch_BMI2_UI" Content="BMI2 - Bit Manipulation Instructions Sets 2" Width="Auto" />
-                            <CheckBox x:Name="UseArch_HLE_UI" Content="HLE - Hardware Lock Elision" Width="Auto" />
-                            <CheckBox x:Name="UseArch_MPX_UI" Content="MPX - Memory Protection Extensions" Width="Auto" />
-                            <CheckBox x:Name="UseArch_RTM_UI" Content="RTM - Transactional Synchronization Extensions" Width="Auto" />
-                            <CheckBox x:Name="UseArch_SHA_UI" Content="SHA - Secure Hash Algorithm Extension" Width="Auto" />
-                            <CheckBox x:Name="UseArch_VMX_UI" Content="VMX - Virtual Machine Extensions" Width="Auto" />
+                            <CheckBox x:Name="ARCH_ADX_UI" Content="ADX - Multi-Precision Add-Carry Instruction Extensions" Width="Auto" />
+                            <CheckBox x:Name="ARCH_AES_UI" Content="AES - Advanced Encryption Standard" Width="Auto" />
+                            <CheckBox x:Name="ARCH_BMI1_UI" Content="BMI1 - Bit Manipulation Instructions Sets 1" Width="Auto" />
+                            <CheckBox x:Name="ARCH_BMI2_UI" Content="BMI2 - Bit Manipulation Instructions Sets 2" Width="Auto" />
+                            <CheckBox x:Name="ARCH_HLE_UI" Content="HLE - Hardware Lock Elision" Width="Auto" />
+                            <CheckBox x:Name="ARCH_MPX_UI" Content="MPX - Memory Protection Extensions" Width="Auto" />
+                            <CheckBox x:Name="ARCH_RTM_UI" Content="RTM - Transactional Synchronization Extensions" Width="Auto" />
+                            <CheckBox x:Name="ARCH_SHA_UI" Content="SHA - Secure Hash Algorithm Extension" Width="Auto" />
+                            <CheckBox x:Name="ARCH_VMX_UI" Content="VMX - Virtual Machine Extensions" Width="Auto" />
 
-                            <CheckBox x:Name="UseArch_SMX_UI" Content="SMX - Safer Mode Extensions" Width="Auto" />
-                            <CheckBox x:Name="UseArch_SGX1_UI" Content="SGX1 - Software Guard Extensions 1" Width="Auto" />
-                            <CheckBox x:Name="UseArch_SGX2_UI" Content="SGX2 - Software Guard Extensions 2" Width="Auto" />
+                            <CheckBox x:Name="ARCH_SMX_UI" Content="SMX - Safer Mode Extensions" Width="Auto" />
+                            <CheckBox x:Name="ARCH_SGX1_UI" Content="SGX1 - Software Guard Extensions 1" Width="Auto" />
+                            <CheckBox x:Name="ARCH_SGX2_UI" Content="SGX2 - Software Guard Extensions 2" Width="Auto" />
+
+                            <CheckBox x:Name="ARCH_CLDEMOTE_UI" Content="CLDEMOTE - Cache Line DEMOTE" Width="Auto" />
+                            <CheckBox x:Name="ARCH_MOVDIR64B_UI" Content="MOVDIR64B - Direct store instructions" Width="Auto" />
+                            <CheckBox x:Name="ARCH_MOVDIRI_UI" Content="MOVDIRI - Direct store instructions" Width="Auto" />
+                            <CheckBox x:Name="ARCH_PCONFIG_UI" Content="PCONFIG" Width="Auto" />
+                            <CheckBox x:Name="ARCH_WAITPKG_UI" Content="User Wait" Width="Auto" />
                         </StackPanel>
                     </GroupBox>
                     <GroupBox Header="Misc" >
                         <StackPanel>
-                            <CheckBox x:Name="UseArch_X64_UI" Content="X64" Width="Auto" />
-                            <CheckBox x:Name="UseArch_FMA_UI" Content="FMA - Fused Multiply-Add" Width="Auto" />
-                            <CheckBox x:Name="UseArch_F16C_UI" Content="F16C - Half Precision FP Conversion" Width="Auto" />
-                            <CheckBox x:Name="UseArch_FSGSBASE_UI" Content="FSGSBASE" Width="Auto" />
-                            <CheckBox x:Name="UseArch_INVPCID_UI" Content="INVPCID - Invalidates TLBs" Width="Auto" />
-                            <CheckBox x:Name="UseArch_PCLMULQDQ_UI" Content="PCLMULQDQ - Carry-Less Multiplication Quadword" Width="Auto" />
-                            <CheckBox x:Name="UseArch_LZCNT_UI" Content="LZCNT - Leading Zero Count" Width="Auto" />
-                            <CheckBox x:Name="UseArch_PREFETCHWT1_UI" Content="PREFETCHWT1" Width="Auto" />
-                            <CheckBox x:Name="UseArch_PREFETCHW_UI" Content="PREFETCHW" Width="Auto" />
-                            <CheckBox x:Name="UseArch_RDPID_UI" Content="RDPID - Read Processor ID" Width="Auto" />
-                            <CheckBox x:Name="UseArch_RDRAND_UI" Content="RDRAND - Read Random Number" Width="Auto" />
-                            <CheckBox x:Name="UseArch_RDSEED_UI" Content="RDSEED - Read Random Seed" Width="Auto" />
-                            <CheckBox x:Name="UseArch_XSAVEOPT_UI" Content="XSAVEOPT - Save Processor Extended States Optimized" Width="Auto" />
-                            <CheckBox x:Name="UseArch_UNDOC_UI" Content="UNDOC - undocumented instructions" Width="Auto" />
-                            <CheckBox x:Name="UseArch_AMD_UI" Content="AMD" Width="Auto" />
-                            <CheckBox x:Name="UseArch_TBM_UI" Content="TBM - Trailing Bit Manipulation (AMD)" Width="Auto" />
-                            <CheckBox x:Name="UseArch_3DNOW_UI" Content="3DNOW" Width="Auto" />
-                            <CheckBox x:Name="UseArch_IA64_UI" Content="IA64" Width="Auto" />
-                            <CheckBox x:Name="UseArch_CYRIX_UI" Content="CYRIX" Width="Auto" />
-                            <CheckBox x:Name="UseArch_CYRIXM_UI" Content="CYRIXM" Width="Auto" />
+                            <CheckBox x:Name="ARCH_X64_UI" Content="X64" Width="Auto" />
+                            <CheckBox x:Name="ARCH_FMA_UI" Content="FMA - Fused Multiply-Add" Width="Auto" />
+                            <CheckBox x:Name="ARCH_F16C_UI" Content="F16C - Half Precision FP Conversion" Width="Auto" />
+                            <CheckBox x:Name="ARCH_FSGSBASE_UI" Content="FSGSBASE" Width="Auto" />
+                            <CheckBox x:Name="ARCH_INVPCID_UI" Content="INVPCID - Invalidates TLBs" Width="Auto" />
+                            <CheckBox x:Name="ARCH_PCLMULQDQ_UI" Content="PCLMULQDQ - Carry-Less Multiplication Quadword" Width="Auto" />
+                            <CheckBox x:Name="ARCH_LZCNT_UI" Content="LZCNT - Leading Zero Count" Width="Auto" />
+                            <CheckBox x:Name="ARCH_PREFETCHWT1_UI" Content="PREFETCHWT1" Width="Auto" />
+                            <CheckBox x:Name="ARCH_PRFCHW_UI" Content="PRFCHW" Width="Auto" />
+                            <CheckBox x:Name="ARCH_RDPID_UI" Content="RDPID - Read Processor ID" Width="Auto" />
+                            <CheckBox x:Name="ARCH_RDRAND_UI" Content="RDRAND - Read Random Number" Width="Auto" />
+                            <CheckBox x:Name="ARCH_RDSEED_UI" Content="RDSEED - Read Random Seed" Width="Auto" />
+                            <CheckBox x:Name="ARCH_XSAVEOPT_UI" Content="XSAVEOPT - Save Processor Extended States Optimized" Width="Auto" />
+                            <CheckBox x:Name="ARCH_UNDOC_UI" Content="UNDOC - undocumented instructions" Width="Auto" />
+                            <CheckBox x:Name="ARCH_AMD_UI" Content="AMD" Width="Auto" />
+                            <CheckBox x:Name="ARCH_TBM_UI" Content="TBM - Trailing Bit Manipulation (AMD)" Width="Auto" />
+                            <CheckBox x:Name="ARCH_3DNOW_UI" Content="3DNOW" Width="Auto" />
+                            <CheckBox x:Name="ARCH_IA64_UI" Content="IA64" Width="Auto" />
+                            <CheckBox x:Name="ARCH_CYRIX_UI" Content="CYRIX" Width="Auto" />
+                            <CheckBox x:Name="ARCH_CYRIXM_UI" Content="CYRIXM" Width="Auto" />
                         </StackPanel>
                     </GroupBox>
                 </StackPanel>

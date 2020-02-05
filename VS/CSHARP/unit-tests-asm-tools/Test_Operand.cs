@@ -1,7 +1,7 @@
 ﻿// The MIT License (MIT)
 //
-// Copyright (c) 2017 Henk-Jan Lebbink
-// 
+// Copyright (c) 2019 Henk-Jan Lebbink
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
@@ -20,24 +20,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using AsmTools;
-
 namespace unit_tests_asm_tools
 {
+    using System;
+    using System.Globalization;
+    using AsmTools;
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
+
     [TestClass]
     public class Test_Operand
     {
+        private static readonly CultureInfo Culture = CultureInfo.CurrentCulture;
+
         [TestMethod]
         public void Test_Operand_Register_1()
         {
             foreach (Rn reg in Enum.GetValues(typeof(Rn)))
             {
-                if (reg == Rn.NOREG) continue;
+                if (reg == Rn.NOREG)
+                {
+                    continue;
+                }
 
-                var regStr = reg.ToString();
-                var op = new Operand(regStr, true);
+                string regStr = reg.ToString();
+                Operand op = new Operand(regStr, true);
                 Assert.IsFalse(op.IsMem, "regStr=" + regStr);
                 Assert.IsFalse(op.IsImm, "regStr=" + regStr);
                 Assert.IsTrue(op.IsReg, "regStr=" + regStr);
@@ -75,12 +81,11 @@ namespace unit_tests_asm_tools
             Assert.AreEqual(32, op.NBits);
         }
 
-
         [TestMethod]
         public void Test_Operand_Constant_SignExtend_1()
-        {   // sign extend 8-bits zero
+        { // sign extend 8-bits zero
             ulong value = 0;
-            Operand op = new Operand(value + "", false);
+            Operand op = new Operand(value + string.Empty, false);
             Assert.IsTrue(op.IsImm);
             Assert.AreEqual(0ul, op.Imm);
             Assert.AreEqual(8, op.NBits);
@@ -122,7 +127,7 @@ namespace unit_tests_asm_tools
 
         [TestMethod]
         public void Test_Operand_Constant_SignExtend_3()
-        {   // sign extend 16-bit positive number
+        { // sign extend 16-bit positive number
             Operand op = new Operand("0x1FFF", false);
             Assert.IsTrue(op.IsImm);
             Assert.AreEqual(0x1FFFul, op.Imm);
@@ -143,7 +148,7 @@ namespace unit_tests_asm_tools
             long signedValue = -10;
             ulong unsignedValue = (ulong)signedValue;
 
-            Operand op = new Operand(signedValue.ToString(), true);
+            Operand op = new Operand(signedValue.ToString(Culture), true);
             Assert.IsTrue(op.IsImm);
             Assert.AreEqual(unsignedValue, op.Imm);
             Assert.AreEqual(8, op.NBits);
@@ -155,55 +160,58 @@ namespace unit_tests_asm_tools
             long signedValue = -128;
             ulong unsignedValue = (ulong)signedValue;
 
-            Operand op = new Operand(signedValue.ToString(), true);
+            Operand op = new Operand(signedValue.ToString(Culture), true);
             Assert.IsTrue(op.IsImm);
             Assert.AreEqual(unsignedValue, op.Imm);
             Assert.AreEqual(8, op.NBits);
         }
+
         [TestMethod]
         public void Test_Operand_Constant_NegativeDecimal_3()
         {
             long signedValue = -256;
             ulong unsignedValue = (ulong)signedValue;
 
-            Operand op = new Operand(signedValue.ToString(), true);
+            Operand op = new Operand(signedValue.ToString(Culture), true);
             Assert.IsTrue(op.IsImm);
             Assert.AreEqual(unsignedValue, op.Imm);
             Assert.AreEqual(16, op.NBits);
         }
+
         [TestMethod]
         public void Test_Operand_Constant_NegativeDecimal_4()
         {
             long signedValue = -0x4FFF;
             ulong unsignedValue = (ulong)signedValue;
 
-            Operand op = new Operand(signedValue.ToString(), true);
+            Operand op = new Operand(signedValue.ToString(Culture), true);
             Assert.IsTrue(op.IsImm);
             Assert.AreEqual(unsignedValue, op.Imm);
             Assert.AreEqual(16, op.NBits);
         }
+
         [TestMethod]
         public void Test_Operand_Constant_NegativeDecimal_5()
         {
             long signedValue = -0x4FFF_0000;
             ulong unsignedValue = (ulong)signedValue;
 
-            Operand op = new Operand(signedValue.ToString(), true);
+            Operand op = new Operand(signedValue.ToString(Culture), true);
             Assert.IsTrue(op.IsImm);
             Assert.AreEqual(unsignedValue, op.Imm);
             Assert.AreEqual(32, op.NBits);
         }
+
         [TestMethod]
         public void Test_Operand_Constant_NegativeDecimal_6()
         {
             long signedValue = -0x4FFF_0000_0000_0000;
             ulong unsignedValue = (ulong)signedValue;
 
-            Operand op = new Operand(signedValue.ToString(), true);
+            Operand op = new Operand(signedValue.ToString(Culture), true);
             Assert.IsTrue(op.IsImm);
             Assert.AreEqual(unsignedValue, op.Imm);
             Assert.AreEqual(64, op.NBits);
         }
     }
 }
-

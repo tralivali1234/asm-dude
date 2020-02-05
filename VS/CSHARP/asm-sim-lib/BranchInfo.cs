@@ -1,7 +1,7 @@
 ﻿// The MIT License (MIT)
 //
-// Copyright (c) 2017 Henk-Jan Lebbink
-// 
+// Copyright (c) 2019 Henk-Jan Lebbink
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
@@ -20,10 +20,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using Microsoft.Z3;
-
 namespace AsmSim
 {
+    using System.Diagnostics.Contracts;
+    using Microsoft.Z3;
+
     public class BranchInfo
     {
         public readonly BoolExpr BranchCondition;
@@ -32,6 +33,8 @@ namespace AsmSim
 
         public BranchInfo(BoolExpr condition, bool taken)
         {
+            Contract.Requires(condition != null);
+
             this.BranchCondition = condition;
             this.Key = condition.ToString();
             this.BranchTaken = taken;
@@ -44,16 +47,18 @@ namespace AsmSim
 
         public BoolExpr GetData(Context ctx)
         {
+            Contract.Requires(ctx != null);
             if (false)
             {
                 BoolExpr bc = this.BranchCondition.Translate(ctx) as BoolExpr;
-                return (this.BranchTaken) ? bc : ctx.MkNot(bc);
+                return this.BranchTaken ? bc : ctx.MkNot(bc);
             }
             else
             {
-                return (this.BranchTaken) ? this.BranchCondition : ctx.MkNot(this.BranchCondition);
+                return this.BranchTaken ? this.BranchCondition : ctx.MkNot(this.BranchCondition);
             }
         }
+
         public override string ToString()
         {
             return "BranchInfo: " + this.BranchCondition + "\n(branch taken " + this.BranchTaken + ")";

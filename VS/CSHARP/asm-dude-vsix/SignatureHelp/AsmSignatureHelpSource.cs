@@ -1,17 +1,17 @@
 // The MIT License (MIT)
 //
-// Copyright (c) 2018 Henk-Jan Lebbink
-// 
+// Copyright (c) 2019 Henk-Jan Lebbink
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,27 +20,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Text;
-using AsmDude.Tools;
-using AsmTools;
-using System.Text;
-
 namespace AsmDude.SignatureHelp
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Collections.ObjectModel;
+    using System.Text;
+    using AsmDude.Tools;
+    using AsmTools;
+    using Microsoft.VisualStudio.Language.Intellisense;
+    using Microsoft.VisualStudio.Text;
+
     internal class AsmSignatureHelpSource : ISignatureHelpSource
     {
-        private readonly ITextBuffer _buffer;
-        private readonly MnemonicStore _store;
+        private readonly ITextBuffer buffer_;
+        private readonly MnemonicStore store_;
 
         public AsmSignatureHelpSource(ITextBuffer buffer)
         {
             //AsmDudeToolsStatic.Output_INFO("AsmSignatureHelpSource:constructor");
-            this._buffer = buffer;
-            this._store = AsmDudeTools.Instance.Mnemonic_Store;
+            this.buffer_ = buffer ?? throw new ArgumentNullException(nameof(buffer));
+            this.store_ = AsmDudeTools.Instance.Mnemonic_Store;
         }
 
         /// <summary>
@@ -54,7 +54,6 @@ namespace AsmDude.SignatureHelp
                 IList<Operand> operands,
                 ISet<Arch> selectedArchitectures)
         {
-
             foreach (AsmSignatureElement asmSignatureElement in data)
             {
                 bool allowed = true;
@@ -100,35 +99,38 @@ namespace AsmDude.SignatureHelp
             //AsmDudeToolsStatic.Output_INFO("AsmSignatureHelpSource: AugmentSignatureHelpSession");
 
             //if (true) return;
-            if (!Settings.Default.SignatureHelp_On) return;
+            if (!Settings.Default.SignatureHelp_On)
+            {
+                return;
+            }
 
             try
             {
                 DateTime time1 = DateTime.Now;
-                ITextSnapshot snapshot = this._buffer.CurrentSnapshot;
-                int position = session.GetTriggerPoint(this._buffer).GetPosition(snapshot);
-                ITrackingSpan applicableToSpan = this._buffer.CurrentSnapshot.CreateTrackingSpan(new Span(position, 0), SpanTrackingMode.EdgeInclusive, 0);
+                ITextSnapshot snapshot = this.buffer_.CurrentSnapshot;
+                int position = session.GetTriggerPoint(this.buffer_).GetPosition(snapshot);
+                ITrackingSpan applicableToSpan = this.buffer_.CurrentSnapshot.CreateTrackingSpan(new Span(position, 0), SpanTrackingMode.EdgeInclusive, 0);
 
                 ITextSnapshotLine line = snapshot.GetLineFromPosition(position);
                 string lineStr = line.GetText();
                 //AsmDudeToolsStatic.Output_INFO("AsmSignatureHelpSource: AugmentSignatureHelpSession: lineStr=" + lineStr+ "; positionInLine=" + positionInLine);
 
-                var t = AsmSourceTools.ParseLine(lineStr);
-                IList<Operand> operands = AsmSourceTools.MakeOperands(t.Args);
-                Mnemonic mnemonic = t.Mnemonic;
+                (string label, Mnemonic mnemonic, string[] args, string remark) t = AsmSourceTools.ParseLine(lineStr);
+                IList<Operand> operands = AsmSourceTools.MakeOperands(t.args);
+                Mnemonic mnemonic = t.mnemonic;
 
                 ISet<Arch> selectedArchitectures = AsmDudeToolsStatic.Get_Arch_Swithed_On();
                 //AsmDudeToolsStatic.Output_INFO("AsmSignatureHelpSource: AugmentSignatureHelpSession: selected architectures=" + ArchTools.ToString(selectedArchitectures));
 
-                foreach (AsmSignatureElement se in AsmSignatureHelpSource.Constrain_Signatures(this._store.GetSignatures(mnemonic), operands, selectedArchitectures))
+                foreach (AsmSignatureElement se in Constrain_Signatures(this.store_.GetSignatures(mnemonic), operands, selectedArchitectures))
                 {
-                    signatures.Add(Create_Signature(this._buffer, se, applicableToSpan));
+                    signatures.Add(this.Create_Signature(this.buffer_, se, applicableToSpan));
                 }
                 AsmDudeToolsStatic.Print_Speed_Warning(time1, "Signature Help");
             }
             catch (Exception e)
             {
-                AsmDudeToolsStatic.Output_ERROR(string.Format("{0}:AugmentSignatureHelpSession; e={1}", ToString(), e.ToString()));
+                AsmDudeToolsStatic.Output_ERROR(string.Format(AsmDudeToolsStatic.CultureUI, "{0}:AugmentSignatureHelpSession; e={1}", this.ToString(), e.ToString()));
             }
         }
 
@@ -141,7 +143,7 @@ namespace AsmDude.SignatureHelp
             if (session.Signatures.Count > 0)
             {
                 ITrackingSpan applicableToSpan = session.Signatures[0].ApplicableToSpan;
-                string text = applicableToSpan.GetText(applicableToSpan.TextBuffer.CurrentSnapshot).Trim().ToUpper();
+                string text_upcase = applicableToSpan.GetText(applicableToSpan.TextBuffer.CurrentSnapshot).Trim().ToUpperInvariant();
 
                 AsmDudeToolsStatic.Output_INFO("AsmSignatureHelpSource: GetBestMatch: session.Signatures.Count=" + session.Signatures.Count);
                 /*
@@ -161,7 +163,7 @@ namespace AsmDude.SignatureHelp
             Span[] locus = new Span[nOperands];
 
             StringBuilder sb = new StringBuilder();
-            sb.Append(signatureElement.Mnemonic.ToString());
+            sb.Append(signatureElement.mnemonic.ToString());
             sb.Append(" ");
             //AsmDudeToolsStatic.Output_INFO("AsmSignatureHelpSource: createSignature: sb=" + sb.ToString());
 
@@ -171,7 +173,10 @@ namespace AsmDude.SignatureHelp
                 sb.Append(signatureElement.Get_Operand_Doc(i));
                 //AsmDudeToolsStatic.Output_INFO("AsmSignatureHelpSource: createSignature: i="+i+"; sb=" + sb.ToString());
                 locus[i] = new Span(locusStart, sb.Length - locusStart);
-                if (i < nOperands - 1) sb.Append(", ");
+                if (i < nOperands - 1)
+                {
+                    sb.Append(", ");
+                }
             }
 
             sb.Append(ArchTools.ToString(signatureElement.Arch));
@@ -192,6 +197,6 @@ namespace AsmDude.SignatureHelp
             return sig;
         }
 
-        public void Dispose() {}
+        public void Dispose() { }
     }
 }
