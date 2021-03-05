@@ -1,6 +1,6 @@
 ﻿// The MIT License (MIT)
 //
-// Copyright (c) 2019 Henk-Jan Lebbink
+// Copyright (c) 2021 Henk-Jan Lebbink
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,7 @@ namespace AsmSim
     using System.Reflection;
     using AsmTools;
     using Microsoft.Z3;
-    using QuickGraph;
+    using QuikGraph;
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000:Dispose objects before losing scope", Justification = "<Pending>")]
     internal class AsmSimMain
